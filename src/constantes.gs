@@ -1,29 +1,18 @@
 const SHEETS = {
-
-  LICENCIES: "Licencies",
-
-  CRENEAUX: "Creneaux",
-
-  CONFIG: "Config",
-
-  GROUPES: "Groupes",
-
+  LICENCIES:"Licencies",
+  CRENEAUX:"Creneaux",
+  CONFIG:"Config",
+  GROUPES:"Groupes",
   STATS: "Statistiques"
-
 };
 
-const VOEUX = [
 
-    "1er Voeu",
-
-    "2eme Voeu",
-
-    "3eme Voeu",
-
-    "4eme Voeu",
-
-    "5eme Voeu"
-
+const VOEUX=[
+ "1er Voeu",
+ "2eme Voeu",
+ "3eme Voeu",
+ "4eme Voeu",
+ "5eme Voeu"
 ];
 
 const CATEGORIES = {
