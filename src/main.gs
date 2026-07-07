@@ -17,424 +17,168 @@
  * ===========================================================
  */
 
-
-/**
- * ===========================================================
- * MENU GOOGLE SHEETS
- * ===========================================================
- */
-function onOpen(){
-
-  SpreadsheetApp
-    .getUi()
-    .createMenu(
-      "🎾 Répartition Tennis"
-    )
-
-    .addItem(
-      "▶ Calculer la répartition",
-      "lancerRepartition"
-    )
-
-    .addItem(
-      "🔄 Optimiser les groupes",
-      "lancerOptimisation"
-    )
-
-    .addItem(
-      "📋 Exporter les groupes",
-      "lancerExport"
-    )
-
-    .addItem(
-      "📊 Générer statistiques",
-      "lancerStatistiques"
-    )
-
-    .addSeparator()
-
-    .addItem(
-      "🧪 Diagnostic données",
-      "diagnosticDonnees"
-    )
-
-    .addToUi();
-
-}
-
-
-
 /**
  * ===========================================================
  * EXECUTION COMPLETE
  * ===========================================================
  */
-function lancerRepartition(){
+function lancerRepartition() {
+  initialiserJournal();
+  debutChrono("REPARTITION");
+  journalInfo("START", "Début calcul répartition");
+  const debut = new Date();
+  SpreadsheetApp.getActive().toast("Calcul de la répartition en cours...");
 
-  const debut =
-    new Date();
+  const contexte = chargerContexte();
 
+  journalInfo("LECTURE", "Joueurs chargés", contexte.joueurs.length);
 
+  journalInfo("LECTURE", "Créneaux chargés", contexte.creneaux.length);
 
-  SpreadsheetApp
-    .getActive()
-    .toast(
-      "Calcul de la répartition en cours..."
-    );
+  const joueurs = enrichirJoueurs(contexte.joueurs);
 
+  journalInfo("PREPARATION", "Joueurs enrichis", joueurs.length);
+  const erreurs = controlerJoueurs(joueurs);
 
-
-  const contexte =
-    chargerContexte();
-
-
-
-  const joueurs =
-    enrichirJoueurs(
-      contexte.joueurs
-    );
-
-
-
-  const erreurs =
-    controlerJoueurs(
-      joueurs
-    );
-
-
-  if(
-    erreurs.length>0
-  ){
-
-    afficherErreurs(
-      erreurs
-    );
+  if (erreurs.length > 0) {
+    afficherErreurs(erreurs);
 
     return;
-
   }
 
+  const creneaux = affecterJoueurs(joueurs, contexte.creneaux, contexte.config);
 
+  optimiserRepartition(creneaux, {
+    iterations: 500,
+  });
 
-  const creneaux =
-    affecterJoueurs(
-      joueurs,
-      contexte.creneaux,
-      contexte.config
-    );
+  journalInfo("AFFECTATION", "Groupes créés", creneaux.length);
 
+  exporterGroupes(creneaux);
 
+  journalInfo("EXPORT", "Export groupes terminé");
 
-  optimiserRepartition(
-    creneaux,
-    {
-      iterations:500
-    }
-  );
+  journalResume(joueurs, contexte.creneaux);
 
+  const stats = genererStatistiques(joueurs, creneaux);
 
+  exporterStatistiques(stats);
 
-  exporterGroupes(
-    creneaux
-  );
+  const duree = (new Date() - debut) / 1000;
 
+  SpreadsheetApp.getActive().toast("Terminé en " + duree + " secondes");
 
-
-  const stats =
-    genererStatistiques(
-      joueurs,
-      creneaux
-    );
-
-
-
-  exporterStatistiques(
-    stats
-  );
-
-
-
-  const duree =
-    (new Date()-debut)
-    /
-    1000;
-
-
-
-  SpreadsheetApp
-    .getActive()
-    .toast(
-      "Terminé en "
-      +
-      duree
-      +
-      " secondes"
-    );
-
-
+  finChrono("REPARTITION");
 }
-
-
 
 /**
  * ===========================================================
  * OPTIMISATION SEULE
  * ===========================================================
  */
-function lancerOptimisation(){
+function lancerOptimisation() {
+  const ss = SpreadsheetApp.getActive();
 
-  const ss =
-    SpreadsheetApp
-    .getActive();
-
-
-  ss.toast(
-    "Optimisation..."
-  );
-
+  ss.toast("Optimisation...");
 
   /*
     On recharge depuis
     la feuille mémoire
     */
 
-  const contexte =
-    chargerContexte();
-
-
+  const contexte = chargerContexte();
 
   /*
     Pour le moment :
     recalcul complet
     */
 
-  const joueurs =
-    enrichirJoueurs(
-      contexte.joueurs
-    );
+  const joueurs = enrichirJoueurs(contexte.joueurs);
 
+  const creneaux = affecterJoueurs(joueurs, contexte.creneaux, contexte.config);
 
-  const creneaux =
-    affecterJoueurs(
-      joueurs,
-      contexte.creneaux,
-      contexte.config
-    );
+  optimisationComplete(creneaux);
 
+  exporterGroupes(creneaux);
 
-
-  optimisationComplete(
-    creneaux
-  );
-
-
-  exporterGroupes(
-    creneaux
-  );
-
-
-  ss.toast(
-    "Optimisation terminée"
-  );
-
+  ss.toast("Optimisation terminée");
 }
-
-
 
 /**
  * ===========================================================
  * EXPORT SEUL
  * ===========================================================
  */
-function lancerExport(){
+function lancerExport() {
+  const contexte = chargerContexte();
 
-  const contexte =
-    chargerContexte();
+  const joueurs = enrichirJoueurs(contexte.joueurs);
 
+  const creneaux = affecterJoueurs(joueurs, contexte.creneaux, contexte.config);
 
-  const joueurs =
-    enrichirJoueurs(
-      contexte.joueurs
-    );
-
-
-  const creneaux =
-    affecterJoueurs(
-      joueurs,
-      contexte.creneaux,
-      contexte.config
-    );
-
-
-  exporterGroupes(
-    creneaux
-  );
-
-
+  exporterGroupes(creneaux);
 }
-
-
 
 /**
  * ===========================================================
  * STATISTIQUES SEULES
  * ===========================================================
  */
-function lancerStatistiques(){
+function lancerStatistiques() {
+  const contexte = chargerContexte();
 
-  const contexte =
-    chargerContexte();
+  const joueurs = enrichirJoueurs(contexte.joueurs);
 
+  const creneaux = affecterJoueurs(joueurs, contexte.creneaux, contexte.config);
 
-  const joueurs =
-    enrichirJoueurs(
-      contexte.joueurs
-    );
+  const stats = genererStatistiques(joueurs, creneaux);
 
-
-  const creneaux =
-    affecterJoueurs(
-      joueurs,
-      contexte.creneaux,
-      contexte.config
-    );
-
-
-  const stats =
-    genererStatistiques(
-      joueurs,
-      creneaux
-    );
-
-
-  exporterStatistiques(
-    stats
-  );
-
-
+  exporterStatistiques(stats);
 }
-
-
 
 /**
  * ===========================================================
  * DIAGNOSTIC
  * ===========================================================
  */
-function diagnosticDonnees(){
+function diagnosticDonnees() {
+  const contexte = chargerContexte();
 
-  const contexte =
-    chargerContexte();
+  const joueurs = enrichirJoueurs(contexte.joueurs);
 
+  const stats = statistiquesLecture(joueurs);
 
+  Logger.log(JSON.stringify(stats, null, 2));
 
-  const joueurs =
-    enrichirJoueurs(
-      contexte.joueurs
-    );
-
-
-  const stats =
-    statistiquesLecture(
-      joueurs
-    );
-
-
-
-  Logger.log(
-    JSON.stringify(
-      stats,
-      null,
-      2
-    )
-  );
-
-
-
-  SpreadsheetApp
-    .getActive()
-    .toast(
-      "Diagnostic envoyé dans les logs"
-    );
-
+  SpreadsheetApp.getActive().toast("Diagnostic envoyé dans les logs");
 }
-
-
 
 /**
  * ===========================================================
  * ERREURS
  * ===========================================================
  */
-function afficherErreurs(
-  erreurs
-){
+function afficherErreurs(erreurs) {
+  const ui = SpreadsheetApp.getUi();
 
-  const ui =
-    SpreadsheetApp
-    .getUi();
-
-
-
-  ui.alert(
-    "Erreurs détectées",
-    erreurs.join(
-      "\n"
-    ),
-    ui.ButtonSet.OK
-  );
-
+  ui.alert("Erreurs détectées", erreurs.join("\n"), ui.ButtonSet.OK);
 }
-
-
 
 /**
  * ===========================================================
  * TEST RAPIDE DU MOTEUR
  * ===========================================================
  */
-function testMoteur(){
+function testMoteur() {
+  const contexte = chargerContexte();
 
-  const contexte =
-    chargerContexte();
+  const joueurs = enrichirJoueurs(contexte.joueurs);
 
+  Logger.log("Joueurs : " + joueurs.length);
 
-  const joueurs =
-    enrichirJoueurs(
-      contexte.joueurs
-    );
+  const creneaux = affecterJoueurs(joueurs, contexte.creneaux, contexte.config);
 
+  Logger.log("Créneaux : " + creneaux.length);
 
-  Logger.log(
-    "Joueurs : "
-    +
-    joueurs.length
-  );
-
-
-  const creneaux =
-    affecterJoueurs(
-      joueurs,
-      contexte.creneaux,
-      contexte.config
-    );
-
-
-  Logger.log(
-    "Créneaux : "
-    +
-    creneaux.length
-  );
-
-
-  Logger.log(
-    JSON.stringify(
-      analyserAffectation(
-        creneaux
-      ),
-      null,
-      2
-    )
-  );
-
+  Logger.log(JSON.stringify(analyserAffectation(creneaux), null, 2));
 }

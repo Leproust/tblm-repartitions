@@ -1,19 +1,18 @@
+/**
+ * ===========================================================
+ * MENU GOOGLE SHEETS
+ * ===========================================================
+ */
 function onOpen() {
-
-    SpreadsheetApp.getUi()
-
-        .createMenu("🎾 Répartition Tennis")
-
-        .addItem("Calculer les groupes","calculer")
-
-        .addSeparator()
-
-        .addItem("Statistiques","genererStatistiques")
-
-        .addSeparator()
-
-        .addItem("Réinitialiser","reinitialiser")
-
-        .addToUi();
-
+  SpreadsheetApp.getUi()
+    .createMenu("🎾 Répartition Tennis")
+    .addItem("▶ Calculer la répartition", "lancerRepartition")
+    .addItem("🔄 Optimiser les groupes", "lancerOptimisation")
+    .addItem("📋 Exporter les groupes", "lancerExport")
+    .addItem("📊 Générer statistiques", "lancerStatistiques")
+    .addItem("📊 Voir les places disponibles", "exporterOccupation")
+    .addItem("👤 Voir joueurs sans créneau", "exporterJoueursSansCreneau")
+    .addSeparator()
+    .addItem("🧪 Diagnostic données", "diagnosticDonnees")
+    .addToUi();
 }

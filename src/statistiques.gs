@@ -16,642 +16,262 @@
  * ===========================================================
  */
 
-
 /**
  * ===========================================================
  * POINT D'ENTREE
  * ===========================================================
  */
-function genererStatistiques(
-  joueurs,
-  creneaux
-){
-
+function genererStatistiques(joueurs, creneaux) {
   return {
+    global: statistiquesGlobales(joueurs),
 
-    global:
-      statistiquesGlobales(
-        joueurs
-      ),
+    groupes: statistiquesGroupes(creneaux),
 
+    voeux: statistiquesVoeux(joueurs),
 
-    groupes:
-      statistiquesGroupes(
-        creneaux
-      ),
-
-
-    voeux:
-      statistiquesVoeux(
-        joueurs
-      ),
-
-
-    problemes:
-      detecterProblemes(
-        joueurs,
-        creneaux
-      )
-
+    problemes: detecterProblemes(joueurs, creneaux),
   };
-
 }
-
-
 
 /**
  * ===========================================================
  * STATISTIQUES GENERALES
  * ===========================================================
  */
-function statistiquesGlobales(
-  joueurs
-){
+function statistiquesGlobales(joueurs) {
+  const total = joueurs.length;
 
-  const total =
-    joueurs.length;
-
-
-  const affectes =
-    joueurs.filter(
-      j =>
-      j.affectation
-    )
-    .length;
-
-
+  const affectes = joueurs.filter((j) => j.affectation).length;
 
   return {
+    joueurs: total,
 
-    joueurs:
-      total,
+    affectes: affectes,
 
+    nonAffectes: total - affectes,
 
-    affectes:
-      affectes,
-
-
-    nonAffectes:
-      total-affectes,
-
-
-    tauxAffectation:
-      total===0
-      ?
-      0
-      :
-      arrondir(
-        affectes
-        /
-        total
-        *
-        100,
-        1
-      )
-
+    tauxAffectation: total === 0 ? 0 : arrondir((affectes / total) * 100, 1),
   };
-
 }
-
-
 
 /**
  * ===========================================================
  * STATISTIQUES DES GROUPES
  * ===========================================================
  */
-function statistiquesGroupes(
-  creneaux
-){
+function statistiquesGroupes(creneaux) {
+  return creneaux.map((c) => {
+    return {
+      creneau: c.nom,
 
-  return creneaux.map(
-    c=>{
+      categorie: c.categorie,
 
+      effectif: c.joueurs.length,
 
-      return {
+      capacite: c.capacite,
 
-        creneau:
-          c.nom,
+      tauxRemplissage:
+        c.capacite === 0
+          ? 0
+          : arrondir((c.joueurs.length / c.capacite) * 100, 1),
 
+      ageMoyen: arrondir(
+        moyenne(c.joueurs, (j) => j.age),
+        1,
+      ),
 
-        categorie:
-          c.categorie,
+      dispersionAge: arrondir(
+        ecartType(c.joueurs, (j) => j.age),
+        2,
+      ),
 
+      niveauMoyen: arrondir(niveauMoyen(c.joueurs), 2),
 
-        effectif:
-          c.joueurs.length,
-
-
-        capacite:
-          c.capacite,
-
-
-        tauxRemplissage:
-          c.capacite===0
-          ?
-          0
-          :
-          arrondir(
-            c.joueurs.length
-            /
-            c.capacite
-            *
-            100,
-            1
-          ),
-
-
-        ageMoyen:
-          arrondir(
-            moyenne(
-              c.joueurs,
-              j=>j.age
-            ),
-            1
-          ),
-
-
-        dispersionAge:
-          arrondir(
-            ecartType(
-              c.joueurs,
-              j=>j.age
-            ),
-            2
-          ),
-
-
-        niveauMoyen:
-          arrondir(
-            niveauMoyen(
-              c.joueurs
-            ),
-            2
-          ),
-
-
-        dispersionNiveau:
-          arrondir(
-            dispersionNiveau(
-              c.joueurs
-            ),
-            2
-          )
-
-      };
-
-
-    }
-  );
-
+      dispersionNiveau: arrondir(dispersionNiveau(c.joueurs), 2),
+    };
+  });
 }
-
-
 
 /**
  * ===========================================================
  * SATISFACTION DES VOEUX
  * ===========================================================
  */
-function statistiquesVoeux(
-  joueurs
-){
+function statistiquesVoeux(joueurs) {
+  let premier = 0;
 
-  let premier=0;
+  let deuxieme = 0;
 
-  let deuxieme=0;
+  let troisieme = 0;
 
-  let troisieme=0;
+  let autre = 0;
 
-  let autre=0;
+  let aucun = 0;
 
-  let aucun=0;
+  joueurs.forEach((joueur) => {
+    if (!joueur.affectation) {
+      aucun++;
 
-
-
-  joueurs.forEach(
-    joueur=>{
-
-
-      if(
-        !joueur.affectation
-      ){
-
-        aucun++;
-
-        return;
-
-      }
-
-
-
-      const position =
-        joueur.voeux
-        .indexOf(
-          joueur.affectation
-        );
-
-
-
-      switch(position){
-
-        case 0:
-          premier++;
-          break;
-
-
-        case 1:
-          deuxieme++;
-          break;
-
-
-        case 2:
-          troisieme++;
-          break;
-
-
-        default:
-          autre++;
-
-      }
-
-
+      return;
     }
-  );
 
+    const position = joueur.voeux.indexOf(joueur.affectation);
 
+    switch (position) {
+      case 0:
+        premier++;
+        break;
 
-  const total =
-    joueurs.length;
+      case 1:
+        deuxieme++;
+        break;
 
+      case 2:
+        troisieme++;
+        break;
 
+      default:
+        autre++;
+    }
+  });
+
+  const total = joueurs.length;
 
   return {
+    premierChoix: pourcentage(premier, total),
 
+    deuxiemeChoix: pourcentage(deuxieme, total),
 
-    premierChoix:
+    troisiemeChoix: pourcentage(troisieme, total),
 
-      pourcentage(
-        premier,
-        total
-      ),
+    autre: pourcentage(autre, total),
 
-
-    deuxiemeChoix:
-
-      pourcentage(
-        deuxieme,
-        total
-      ),
-
-
-    troisiemeChoix:
-
-      pourcentage(
-        troisieme,
-        total
-      ),
-
-
-    autre:
-
-      pourcentage(
-        autre,
-        total
-      ),
-
-
-    aucun:
-
-      pourcentage(
-        aucun,
-        total
-      )
-
-
+    aucun: pourcentage(aucun, total),
   };
-
 }
-
-
 
 /**
  * ===========================================================
  * DETECTION PROBLEMES
  * ===========================================================
  */
-function detecterProblemes(
-  joueurs,
-  creneaux
-){
-
-  const problemes=[];
-
-
+function detecterProblemes(joueurs, creneaux) {
+  const problemes = [];
 
   /*
     Joueurs sans groupe
   */
 
   joueurs
-  .filter(
-    j=>
-    !j.affectation
-  )
-  .forEach(
-    j=>{
-
-
+    .filter((j) => !j.affectation)
+    .forEach((j) => {
       problemes.push({
+        type: "NON_AFFECTE",
 
-        type:
-          "NON_AFFECTE",
-
-
-        joueur:
-          j.nom
-          +
-          " "
-          +
-          j.prenom
-
+        joueur: j.nom + " " + j.prenom,
       });
-
-
-    }
-  );
-
-
+    });
 
   /*
     Groupes trop grands
   */
 
-  creneaux.forEach(
-    c=>{
+  creneaux.forEach((c) => {
+    if (c.joueurs.length > c.capacite) {
+      problemes.push({
+        type: "SURBOOKING",
 
+        creneau: c.nom,
 
-      if(
-        c.joueurs.length
-        >
-        c.capacite
-      ){
+        valeur: c.joueurs.length - c.capacite,
+      });
+    }
 
-        problemes.push({
-
-          type:
-            "SURBOOKING",
-
-
-          creneau:
-            c.nom,
-
-
-          valeur:
-            c.joueurs.length
-            -
-            c.capacite
-
-        });
-
-      }
-
-
-
-      /*
+    /*
         Groupe jeune avec
         trop d'écart âge
       */
 
-      if(
-        c.joueurs.length>1
-        &&
-        estJeune(
-          c.joueurs[0]
-        )
-      ){
+    if (c.joueurs.length > 1 && estJeune(c.joueurs[0])) {
+      const dispersion = ecartType(c.joueurs, (j) => j.age);
 
-        const dispersion =
-          ecartType(
-            c.joueurs,
-            j=>j.age
-          );
+      if (dispersion > 2) {
+        problemes.push({
+          type: "AGE",
 
+          creneau: c.nom,
 
-
-        if(
-          dispersion>2
-        ){
-
-          problemes.push({
-
-            type:
-              "AGE",
-
-
-            creneau:
-              c.nom,
-
-
-            dispersion:
-              arrondir(
-                dispersion,
-                2
-              )
-
-          });
-
-        }
-
-
+          dispersion: arrondir(dispersion, 2),
+        });
       }
-
-
     }
-  );
-
-
+  });
 
   return problemes;
-
 }
-
-
 
 /**
  * ===========================================================
  * SCORE QUALITE GLOBAL
  * ===========================================================
  */
-function scoreQualiteGlobale(
-  joueurs,
-  creneaux
-){
+function scoreQualiteGlobale(joueurs, creneaux) {
+  let score = 100;
 
-  let score=100;
-
-
-
-  const voeux =
-    statistiquesVoeux(
-      joueurs
-    );
-
-
+  const voeux = statistiquesVoeux(joueurs);
 
   /*
     Pénalité voeux
   */
 
-  score -=
-    voeux.aucun
-    *
-    0.5;
-
-
+  score -= voeux.aucun * 0.5;
 
   /*
     Pénalité dispersion groupes
   */
 
-  creneaux.forEach(
-    c=>{
+  creneaux.forEach((c) => {
+    score -= dispersionNiveau(c.joueurs) * 2;
 
-
-      score -=
-        dispersionNiveau(
-          c.joueurs
-        )
-        *
-        2;
-
-
-
-      if(
-        estJeune(
-          c.joueurs[0]
-        )
-      ){
-
-        score -=
-          ecartType(
-            c.joueurs,
-            j=>j.age
-          )
-          *
-          5;
-
-      }
-
-
+    if (c.joueurs.length > 0 && estJeune(c.joueurs[0])) {
+      score -= ecartType(c.joueurs, (j) => j.age) * 5;
     }
-  );
+  });
 
-
-
-  return arrondir(
-    Math.max(
-      0,
-      score
-    ),
-    2
-  );
-
+  return arrondir(Math.max(0, score), 2);
 }
-
-
 
 /**
  * ===========================================================
  * EXPORT DES STATISTIQUES
  * ===========================================================
  */
-function exporterStatistiques(
-  stats
-){
-
-  const feuille =
-    obtenirOuCreerFeuille(
-      "Statistiques"
-    );
-
+function exporterStatistiques(stats) {
+  const feuille = obtenirOuCreerFeuille("Statistiques");
 
   feuille.clear();
 
+  const lignes = [];
 
+  lignes.push(["Indicateur", "Valeur"]);
 
-  const lignes=[];
+  Object.keys(stats.global).forEach((cle) => {
+    lignes.push([cle, stats.global[cle]]);
+  });
 
+  lignes.push(["", ""]);
 
-  lignes.push([
+  lignes.push(["Satisfaction voeux"]);
 
-    "Indicateur",
+  Object.keys(stats.voeux).forEach((cle) => {
+    lignes.push([cle, stats.voeux[cle]]);
+  });
 
-    "Valeur"
+  ecrireTableau(feuille, lignes);
 
-  ]);
+  feuille.autoResizeColumns(1, 2);
+}
 
-
-  Object.keys(
-    stats.global
-  )
-  .forEach(
-    cle=>{
-
-
-      lignes.push([
-
-        cle,
-
-        stats.global[cle]
-
-      ]);
-
-    }
-  );
-
-
-
-  lignes.push([]);
-
-  lignes.push([
-
-    "Satisfaction voeux"
-
-  ]);
-
-
-
-  Object.keys(
-    stats.voeux
-  )
-  .forEach(
-    cle=>{
-
-
-      lignes.push([
-
-        cle,
-
-        stats.voeux[cle]
-
-      ]);
-
-    }
-  );
-
-
-
-  ecrireTableau(
-    feuille,
-    lignes
-  );
-
-
-  feuille.autoResizeColumns(
-    1,
-    2
-  );
-
-
+function joueursSansCreneau(joueurs) {
+  return joueurs.filter((j) => !j.creneau);
 }

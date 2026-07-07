@@ -17,39 +17,35 @@
  * ===========================================================
  */
 
-
 /**
  * Point d'entrée principal
  */
-function affecterJoueurs(
-  joueurs,
-  creneaux,
-  config
-){
+function affecterJoueurs(joueurs, creneaux, config) {
+  Logger.log("DEBUG affectation");
+  journalDebug("AFFECTATION", "Début affectation", joueurs.length);
+  Logger.log("joueurs = " + (joueurs ? joueurs.length : "undefined"));
 
-  const poids =
-    obtenirPoids(
-      config
-    );
+  Logger.log("creneaux = " + (creneaux ? creneaux.length : "undefined"));
 
+  Logger.log("config = " + JSON.stringify(config));
+
+  if (!joueurs) throw new Error("Liste joueurs absente");
+
+  if (!creneaux) throw new Error("Liste créneaux absente");
+
+  const poids = obtenirPoids(config);
 
   /*
     On initialise les créneaux
   */
 
-  reinitialiserCreneaux(
-    creneaux
-  );
-
+  reinitialiserCreneaux(creneaux);
 
   /*
     On calcule les niveaux
   */
 
-  enrichirNiveau(
-    joueurs
-  );
-
+  enrichirNiveau(joueurs);
 
   /*
     On trie les joueurs
@@ -57,76 +53,37 @@ function affecterJoueurs(
     au plus facile
   */
 
-  const ordre =
-    trierJoueursAffectation(
-      joueurs
-    );
+  const ordre = trierJoueursAffectation(joueurs);
 
+  ordre.forEach((joueur) => {
+    const choix = trouverMeilleurCreneau(joueur, creneaux, poids);
 
-  ordre.forEach(
-    joueur=>{
-
-
-      const choix =
-        trouverMeilleurCreneau(
-          joueur,
-          creneaux,
-          poids
-        );
-
-
-      if(choix){
-
-        ajouterJoueurCreneau(
-          joueur,
-          choix
-        );
-
-      }
-      else{
-
-        Logger.log(
-          "Impossible de placer : "
-          +
-          joueur.nom
-          +
-          " "
-          +
-          joueur.prenom
-        );
-
-      }
-
+    if (choix) {
+      ajouterJoueurCreneau(joueur, choix);
+    } else {
+      Logger.log("Impossible de placer : " + joueur.nom + " " + joueur.prenom);
     }
+  });
+
+  journalInfo(
+    "AFFECTATION",
+    "Affectation terminée",
+    joueurs.filter((j) => j.creneau).length,
   );
 
-
   return creneaux;
-
 }
-
-
 
 /**
  * ===========================================================
  * INITIALISATION
  * ===========================================================
  */
-function reinitialiserCreneaux(
-  creneaux
-){
-
-  creneaux.forEach(
-    c=>{
-
-      c.joueurs=[];
-
-    }
-  );
-
+function reinitialiserCreneaux(creneaux) {
+  creneaux.forEach((c) => {
+    c.joueurs = [];
+  });
 }
-
-
 
 /**
  * ===========================================================
@@ -144,197 +101,103 @@ function reinitialiserCreneaux(
  * 4) nouveaux
  *
  */
-function trierJoueursAffectation(
-  joueurs
-){
+function trierJoueursAffectation(joueurs) {
+  return [...joueurs].sort((a, b) => {
+    let scoreA = 0;
+    let scoreB = 0;
 
-  return [...joueurs]
-    .sort(
-      (a,b)=>{
-
-
-        let scoreA=0;
-        let scoreB=0;
-
-
-        /*
+    /*
           Nombre de possibilités
         */
 
-        scoreA +=
-          (5-a.voeux.length)*20;
+    scoreA += (5 - a.voeux.length) * 20;
 
-        scoreB +=
-          (5-b.voeux.length)*20;
+    scoreB += (5 - b.voeux.length) * 20;
 
-
-
-        /*
+    /*
           Jeunes
         */
 
-        if(estJeune(a))
-          scoreA+=50;
+    if (estJeune(a)) scoreA += 50;
 
-        if(estJeune(b))
-          scoreB+=50;
+    if (estJeune(b)) scoreB += 50;
 
-
-
-        /*
+    /*
           Compétition
         */
 
-        if(a.competition)
-          scoreA+=20;
+    if (a.competition) scoreA += 20;
 
-        if(b.competition)
-          scoreB+=20;
+    if (b.competition) scoreB += 20;
 
-
-
-        /*
+    /*
           Nouveau
         */
 
-        if(a.nouveau)
-          scoreA+=10;
+    if (a.nouveau) scoreA += 10;
 
-        if(b.nouveau)
-          scoreB+=10;
+    if (b.nouveau) scoreB += 10;
 
-
-
-        return scoreB-scoreA;
-
-      }
-    );
-
+    return scoreB - scoreA;
+  });
 }
-
-
 
 /**
  * ===========================================================
  * RECHERCHE DU MEILLEUR CRENEAU
  * ===========================================================
  */
-function trouverMeilleurCreneau(
-  joueur,
-  creneaux,
-  poids
-){
+function trouverMeilleurCreneau(joueur, creneaux, poids) {
+  let meilleur = null;
 
-  let meilleur=null;
+  let meilleurScore = -Infinity;
 
-  let meilleurScore=-Infinity;
+  creneaux.forEach((creneau) => {
+    if (!creneau.actif) return;
 
-
-
-  creneaux.forEach(
-    creneau=>{
-
-
-      if(!creneau.actif)
-        return;
-
-
-
-      /*
+    /*
         Catégorie incompatible
       */
 
-      if(
-        !categorieCompatible(
-          joueur,
-          creneau
-        )
-      )
-        return;
+    if (!categorieCompatible(joueur, creneau)) return;
 
-
-
-      /*
+    /*
         Capacité dépassée
       */
 
-      if(
-        !placeDisponible(
-          creneau
-        )
-      )
-        return;
+    if (!placeDisponible(creneau)) return;
 
+    const score = calculerScoreAffectation(joueur, creneau, poids);
 
+    if (score > meilleurScore) {
+      meilleurScore = score;
 
-      const score =
-        calculerScoreAffectation(
-          joueur,
-          creneau,
-          poids
-        );
-
-
-
-      if(
-        score
-        >
-        meilleurScore
-      ){
-
-        meilleurScore=score;
-
-        meilleur=creneau;
-
-      }
-
-
+      meilleur = creneau;
     }
-  );
-
+  });
 
   return meilleur;
-
 }
-
-
 
 /**
  * ===========================================================
  * COMPATIBILITE CATEGORIE
  * ===========================================================
  */
-function categorieCompatible(
-  joueur,
-  creneau
-){
-
-
+function categorieCompatible(joueur, creneau) {
   /*
     Créneau prévu pour
     la catégorie
   */
 
-  if(
-    joueur.categorie
-    ===
-    creneau.categorie
-  )
-    return true;
-
-
+  if (joueur.categorie === creneau.categorie) return true;
 
   /*
     On refuse les mélanges
     jeunes.
     */
 
-  if(
-    estJeune(joueur)
-  )
-    return false;
-
-
+  if (estJeune(joueur)) return false;
 
   /*
     Adultes :
@@ -343,151 +206,71 @@ function categorieCompatible(
   */
 
   return true;
-
 }
-
-
 
 /**
  * ===========================================================
  * CAPACITE
  * ===========================================================
  */
-function placeDisponible(
-  creneau
-){
-
-  return (
-    creneau.joueurs.length
-    <
-    (
-      creneau.capacite
-      +
-      creneau.surbooking
-    )
-  );
-
+function placeDisponible(creneau) {
+  return creneau.joueurs.length < creneau.capacite + creneau.surbooking;
 }
-
-
 
 /**
  * ===========================================================
  * AJOUT JOUEUR
  * ===========================================================
  */
-function ajouterJoueurCreneau(
-  joueur,
-  creneau
-){
+function ajouterJoueurCreneau(joueur, creneau) {
+  creneau.joueurs.push(joueur);
 
-  creneau.joueurs.push(
-    joueur
-  );
-
-
-  joueur.affectation =
-    creneau.nom;
-
+  joueur.affectation = creneau.nom;
 }
-
-
 
 /**
  * ===========================================================
  * CONTROLE RESULTAT
  * ===========================================================
  */
-function analyserAffectation(
-  creneaux
-){
+function analyserAffectation(creneaux) {
+  const resultat = {};
 
-  const resultat={};
+  creneaux.forEach((c) => {
+    resultat[c.nom] = {
+      effectif: c.joueurs.length,
 
+      capacite: c.capacite,
 
-  creneaux.forEach(
-    c=>{
+      complet: c.joueurs.length >= c.capacite,
 
-      resultat[c.nom]={
-
-        effectif:
-          c.joueurs.length,
-
-
-        capacite:
-          c.capacite,
-
-
-        complet:
-          c.joueurs.length
-          >=
-          c.capacite,
-
-
-        joueurs:
-          c.joueurs.map(
-            j=>
-              j.nom
-              +
-              " "
-              +
-              j.prenom
-          )
-
-      };
-
-    }
-  );
-
+      joueurs: c.joueurs.map((j) => j.nom + " " + j.prenom),
+    };
+  });
 
   return resultat;
-
 }
-
-
 
 /**
  * ===========================================================
  * JOUEURS NON AFFECTES
  * ===========================================================
  */
-function joueursNonAffectes(
-  joueurs
-){
-
-  return joueurs.filter(
-    j=>
-      !j.affectation
-  );
-
+function joueursNonAffectes(joueurs) {
+  return joueurs.filter((j) => !j.affectation);
 }
-
-
 
 /**
  * ===========================================================
  * SCORE TOTAL INITIAL
  * ===========================================================
  */
-function scoreAffectationTotale(
-  creneaux
-){
+function scoreAffectationTotale(creneaux) {
+  let score = 0;
 
-  let score=0;
-
-
-  creneaux.forEach(
-    c=>{
-
-      score +=
-        calculerScoreGroupe(
-          c.joueurs
-        );
-
-    }
-  );
-
+  creneaux.forEach((c) => {
+    score += calculerScoreGroupe(c.joueurs);
+  });
 
   return score;
-
 }

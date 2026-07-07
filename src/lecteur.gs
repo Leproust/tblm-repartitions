@@ -6,19 +6,27 @@
  */
 
 function chargerContexte() {
-
   const ss = SpreadsheetApp.getActiveSpreadsheet();
 
+  const joueurs = lireJoueurs(ss) || [];
+
+  const creneaux = lireCreneaux(ss) || [];
+
+  const config = lireConfiguration(ss) || {};
+
+  Logger.log("CONTEXTE");
+
+  Logger.log("Joueurs : " + joueurs.length);
+
+  Logger.log("Créneaux : " + creneaux.length);
+
+  Logger.log("Config : " + Object.keys(config).length);
+
   return {
-
-    joueurs: lireJoueurs(ss),
-
-    creneaux: lireCreneaux(ss),
-
-    config: lireConfiguration(ss)
-
+    joueurs,
+    creneaux,
+    config,
   };
-
 }
 
 /* ===========================================================
@@ -27,16 +35,13 @@ function chargerContexte() {
  */
 
 function lireJoueurs(ss) {
-
   const feuille = ss.getSheetByName(SHEETS.LICENCIES);
 
-  if (!feuille)
-    throw new Error("Feuille Licencies introuvable");
+  if (!feuille) throw new Error("Feuille Licencies introuvable");
 
   const data = feuille.getDataRange().getValues();
 
-  if (data.length < 2)
-    return [];
+  if (data.length < 2) return [];
 
   const headers = data.shift();
 
@@ -45,35 +50,22 @@ function lireJoueurs(ss) {
   const joueurs = [];
 
   data.forEach((ligne, numero) => {
-
-    if (ligneVide(ligne))
-      return;
+    if (ligneVide(ligne)) return;
 
     try {
+      const joueur = parserJoueur(ligne, index);
 
-      joueurs.push(
-          normaliserJoueur(
-              parserJoueur(ligne,index)
-          )
-      );
-
-    } catch(e) {
-
-      Logger.log(
-        "Erreur ligne "
-        + (numero+2)
-        + " : "
-        + e.message
-      );
-
+      if (joueur) {
+        joueurs.push(normaliserJoueur(joueur));
+      }
+    } catch (e) {
+      Logger.log("Erreur ligne " + (numero + 2) + " : " + e.message);
     }
-
   });
 
   Logger.log(joueurs.length + " joueur(s) chargé(s)");
 
   return joueurs;
-
 }
 
 /* ===========================================================
@@ -81,84 +73,46 @@ function lireJoueurs(ss) {
  * ===========================================================
  */
 
-function parserJoueur(ligne,index){
-
+function parserJoueur(ligne, index) {
   const joueur = {
+    nouveau: lireBoolean(ligne[index["Nouveau Adherent"]]),
 
-    nouveau:
-      lireBoolean(
-        ligne[index["Nouveau Adherent"]]
-      ),
+    licence: lireTexte(ligne[index["Licence"]]),
 
-    licence:
-      lireTexte(
-        ligne[index["Licence"]]
-      ),
+    nom: lireTexte(ligne[index["Nom"]]),
 
-    nom:
-      lireTexte(
-        ligne[index["Nom"]]
-      ),
+    prenom: lireTexte(ligne[index["Prénom"]]),
 
-    prenom:
-      lireTexte(
-        ligne[index["Prénom"]]
-      ),
+    categorie: lireTexte(ligne[index["Categorie"]]),
 
-    categorie:
-      lireTexte(
-        ligne[index["Categorie"]]
-      ),
+    naissance: ligne[index["Date Naissance"]],
 
-    naissance:
-      ligne[index["Date Naissance"]],
+    age: lireNombre(ligne[index["Âge"]]),
 
-    age:
-      lireNombre(
-        ligne[index["Âge"]]
-      ),
+    sexe: lireTexte(ligne[index["Sexe"]]),
 
-    sexe:
-      lireTexte(
-        ligne[index["Sexe"]]
-      ),
+    classement: nettoyerClassement(lireTexte(ligne[index["Classement"]])),
 
-    classement:
-      nettoyerClassement(
-        lireTexte(
-          ligne[index["Classement"]]
-        )
-      ),
+    niveau: 0,
 
-    niveau:0,
+    anciennete: lireNombre(ligne[index["Annee Tennis"]]),
 
-    anciennete:
-      lireNombre(
-        ligne[index["Annee Tennis"]]
-      ),
+    meilleurClassement: lireTexte(ligne[index["Meilleur Classement"]]),
 
-    meilleurClassement:
-      lireTexte(
-        ligne[index["Meilleur Classement"]]
-      ),
+    competition: lireBoolean(ligne[index["Competition"]]),
 
-    competition:
-      lireBoolean(
-        ligne[index["Competition"]]
-      ),
+    voeux: lireVoeux(ligne, index),
 
-    voeux:lireVoeux(ligne,index),
+    affectation: null,
 
-    affectation:null,
-
-    score:0
-
+    score: 0,
   };
 
-  verifierJoueur(joueur);
+  if (!verifierJoueur(joueur)) {
+    return null;
+  }
 
   return joueur;
-
 }
 
 /* ===========================================================
@@ -166,23 +120,16 @@ function parserJoueur(ligne,index){
  * ===========================================================
  */
 
-function lireVoeux(ligne,index){
+function lireVoeux(ligne, index) {
+  const liste = [];
 
-  const liste=[];
+  VOEUX.forEach((v) => {
+    const valeur = lireTexte(ligne[index[v]]);
 
-  VOEUX.forEach(v=>{
-
-      const valeur=lireTexte(
-          ligne[index[v]]
-      );
-
-      if(valeur!="")
-        liste.push(valeur);
-
+    if (valeur != "") liste.push(valeur);
   });
 
   return liste;
-
 }
 
 /* ===========================================================
@@ -190,17 +137,18 @@ function lireVoeux(ligne,index){
  * ===========================================================
  */
 
-function verifierJoueur(j){
+function verifierJoueur(j) {
+  if (!j.nom && !j.prenom) {
+    Logger.log("Ligne ignorée : joueur sans identité");
 
-    if(j.nom=="")
-      throw new Error("Nom absent");
+    return false;
+  }
 
-    if(j.prenom=="")
-      throw new Error("Prénom absent");
+  if (!j.categorie) {
+    j.categorie = "A controler";
+  }
 
-    if(j.categorie=="")
-      throw new Error("Catégorie absente");
-
+  return true;
 }
 
 /* ===========================================================
@@ -208,76 +156,44 @@ function verifierJoueur(j){
  * ===========================================================
  */
 
-function lireCreneaux(ss){
+function lireCreneaux(ss) {
+  const feuille = ss.getSheetByName(SHEETS.CRENEAUX);
 
-    const feuille=ss.getSheetByName(
-        SHEETS.CRENEAUX
-    );
+  if (!feuille) throw new Error("Feuille Creneaux introuvable");
 
-    if(!feuille)
-      throw new Error(
-        "Feuille Creneaux introuvable"
-      );
+  const data = feuille.getDataRange().getValues();
 
-    const data=feuille
-        .getDataRange()
-        .getValues();
+  const headers = data.shift();
 
-    const headers=data.shift();
+  const index = construireIndex(headers);
 
-    const index=construireIndex(headers);
+  const liste = [];
 
-    const liste=[];
+  data.forEach((l) => {
+    if (ligneVide(l)) return;
 
-    data.forEach(l=>{
+    liste.push({
+      nom: lireTexte(l[index["Creneau"]]),
 
-        if(ligneVide(l))
-          return;
+      jour: lireTexte(l[index["Jour"]]),
 
-        liste.push({
+      heure: lireTexte(l[index["Heure"]]),
 
-            nom:lireTexte(
-                l[index["Creneau"]]
-            ),
+      categorie: lireTexte(l[index["Catégorie"]]),
 
-            jour:lireTexte(
-                l[index["Jour"]]
-            ),
+      capacite: lireNombre(l[index["Effectif"]]),
 
-            heure:lireTexte(
-                l[index["Heure"]]
-            ),
+      surbooking: lireNombre(l[index["Surbooking"]]),
 
-            categorie:lireTexte(
-                l[index["Catégorie"]]
-            ),
+      actif: lireTexte(l[index["Actif"]]) == "Oui",
 
-            capacite:lireNombre(
-                l[index["Effectif"]]
-            ),
-
-            surbooking:lireNombre(
-                l[index["Surbooking"]]
-            ),
-
-            actif:
-              lireTexte(
-                l[index["Actif"]]
-              )=="Oui",
-
-            joueurs:[]
-
-        });
-
+      joueurs: [],
     });
+  });
 
-    Logger.log(
-      liste.length+
-      " créneaux chargés"
-    );
+  Logger.log(liste.length + " créneaux chargés");
 
-    return liste;
-
+  return liste;
 }
 
 /* ===========================================================
@@ -285,37 +201,21 @@ function lireCreneaux(ss){
  * ===========================================================
  */
 
-function lireConfiguration(ss){
+function lireConfiguration(ss) {
+  const feuille = ss.getSheetByName(SHEETS.CONFIG);
 
-    const feuille=
-        ss.getSheetByName(
-            SHEETS.CONFIG
-        );
+  if (!feuille) throw new Error("Feuille Config absente");
 
-    if(!feuille)
-      throw new Error(
-          "Feuille Config absente"
-      );
+  const valeurs = feuille.getDataRange().getValues();
 
-    const valeurs=
-      feuille
-      .getDataRange()
-      .getValues();
+  const config = {};
 
-    const config={};
+  valeurs.slice(1).forEach((l) => {
+    config[lireTexte(l[0])] = l[1];
+  });
 
-    valeurs.slice(1).forEach(l=>{
-
-        config[
-            lireTexte(l[0])
-        ]=l[1];
-
-    });
-
-    return config;
-
+  return config;
 }
-
 
 /**
  * ===========================================================
@@ -323,215 +223,91 @@ function lireConfiguration(ss){
  * ===========================================================
  */
 
-
 /**
  * Normalise un joueur après lecture
  */
-function normaliserJoueur(joueur){
+function normaliserJoueur(joueur) {
+  joueur.nom = normaliserTexte(joueur.nom);
 
+  joueur.prenom = normaliserTexte(joueur.prenom);
 
-  joueur.nom =
-    normaliserTexte(
-      joueur.nom
-    );
+  joueur.categorie = normaliserCategorie(joueur.categorie);
 
+  joueur.sexe = normaliserSexe(joueur.sexe);
 
-  joueur.prenom =
-    normaliserTexte(
-      joueur.prenom
-    );
+  joueur.classement = nettoyerClassement(joueur.classement);
 
-
-  joueur.categorie =
-    normaliserCategorie(
-      joueur.categorie
-    );
-
-
-  joueur.sexe =
-    normaliserSexe(
-      joueur.sexe
-    );
-
-
-  joueur.classement =
-    nettoyerClassement(
-      joueur.classement
-    );
-
-
-  if(
-    joueur.age===0 &&
-    joueur.naissance
-  ){
-
-    joueur.age =
-      calculerAge(
-        joueur.naissance
-      );
-
+  if (joueur.age === 0 && joueur.naissance) {
+    joueur.age = calculerAge(joueur.naissance);
   }
 
-
-  joueur.voeux =
-    nettoyerVoeux(
-      joueur.voeux
-    );
-
+  joueur.voeux = nettoyerVoeux(joueur.voeux);
 
   return joueur;
-
 }
-
 
 /**
  * ===========================================================
  * TEXTE
  * ===========================================================
  */
-function normaliserTexte(
-  texte
-){
+function normaliserTexte(texte) {
+  if (!texte) return "";
 
-  if(!texte)
-    return "";
-
-
-  return String(texte)
-    .trim()
-    .replace(
-      /\s+/g,
-      " "
-    );
-
+  return String(texte).trim().replace(/\s+/g, " ");
 }
-
-
 
 /**
  * ===========================================================
  * CATEGORIES
  * ===========================================================
  */
-function normaliserCategorie(
-  categorie
-){
+function normaliserCategorie(categorie) {
+  if (!categorie) return "";
 
-  if(!categorie)
-    return "";
+  const valeur = categorie.toString().trim().toLowerCase();
 
+  if (valeur.includes("baby")) return "BABY";
 
-  const valeur =
-    categorie
-    .toString()
-    .trim()
-    .toLowerCase();
+  if (valeur.includes("primaire")) return "Primaire";
 
-
-
-  if(
-    valeur.includes("baby")
-  )
-    return "BABY";
-
-
-  if(
-    valeur.includes("primaire")
-  )
-    return "Primaire";
-
-
-  if(
-    valeur.includes("college") ||
-    valeur.includes("collège")
-  )
+  if (valeur.includes("college") || valeur.includes("collège"))
     return "College";
 
+  if (valeur.includes("femme")) return "Femme";
 
-  if(
-    valeur.includes("femme")
-  )
-    return "Femme";
-
-
-  if(
-    valeur.includes("homme")
-  )
-    return "Homme adulte";
-
+  if (valeur.includes("homme")) return "Homme adulte";
 
   return categorie;
-
 }
-
-
 
 /**
  * ===========================================================
  * SEXE
  * ===========================================================
  */
-function normaliserSexe(
-  sexe
-){
+function normaliserSexe(sexe) {
+  if (!sexe) return "";
 
-  if(!sexe)
-    return "";
+  const valeur = String(sexe).toUpperCase().trim();
 
+  if (valeur === "F" || valeur === "FEMME") return "F";
 
-  const valeur =
-    String(sexe)
-    .toUpperCase()
-    .trim();
-
-
-  if(
-    valeur==="F" ||
-    valeur==="FEMME"
-  )
-    return "F";
-
-
-  if(
-    valeur==="H" ||
-    valeur==="HOMME"
-  )
-    return "H";
-
+  if (valeur === "H" || valeur === "HOMME") return "H";
 
   return valeur;
-
 }
-
-
 
 /**
  * ===========================================================
  * VOEUX
  * ===========================================================
  */
-function nettoyerVoeux(
-  voeux
-){
+function nettoyerVoeux(voeux) {
+  if (!voeux) return [];
 
-  if(!voeux)
-    return [];
-
-
-  return voeux
-    .filter(
-      v =>
-      v &&
-      v.trim()!=""
-    )
-    .map(
-      v =>
-      v.trim()
-    );
-
+  return voeux.filter((v) => v && v.trim() != "").map((v) => v.trim());
 }
-
-
 
 /**
  * ===========================================================
@@ -539,146 +315,59 @@ function nettoyerVoeux(
  * ===========================================================
  */
 
-
 /**
  * Vérifie les données joueurs
  */
-function controlerJoueurs(
-  joueurs
-){
+function controlerJoueurs(joueurs) {
+  const erreurs = [];
 
-  const erreurs=[];
-
-
-  joueurs.forEach(
-    (j,index)=>{
-
-
-      if(!j.nom){
-
-        erreurs.push(
-          "Joueur ligne "
-          +
-          index
-          +
-          " sans nom"
-        );
-
-      }
-
-
-      if(!j.categorie){
-
-        erreurs.push(
-          j.nom
-          +
-          " : catégorie absente"
-        );
-
-      }
-
-
-      if(
-        j.voeux.length===0
-      ){
-
-        Logger.log(
-          j.nom
-          +
-          " sans voeu"
-        );
-
-      }
-
-
+  joueurs.forEach((j, index) => {
+    if (!j.nom) {
+      erreurs.push("Joueur ligne " + index + " sans nom");
     }
-  );
 
+    if (!j.categorie) {
+      erreurs.push(j.nom + " : catégorie absente");
+    }
+
+    if (j.voeux.length === 0) {
+      Logger.log(j.nom + " sans voeu");
+    }
+  });
 
   return erreurs;
-
 }
-
-
 
 /**
  * ===========================================================
  * ENRICHISSEMENT COMPLET
  * ===========================================================
  */
-function enrichirJoueurs(
-  joueurs
-){
-
-  joueurs.forEach(
-    joueur=>{
-
-      normaliserJoueur(
-        joueur
-      );
-
-    }
-  );
-
+function enrichirJoueurs(joueurs) {
+  joueurs.forEach((joueur) => {
+    normaliserJoueur(joueur);
+  });
 
   return joueurs;
-
 }
-
-
 
 /**
  * ===========================================================
  * STATISTIQUES DE LECTURE
  * ===========================================================
  */
-function statistiquesLecture(
-  joueurs
-){
-
+function statistiquesLecture(joueurs) {
   return {
+    total: joueurs.length,
 
-    total:
-      joueurs.length,
+    baby: joueurs.filter((j) => j.categorie === "BABY").length,
 
+    primaire: joueurs.filter((j) => j.categorie === "Primaire").length,
 
-    baby:
-      joueurs.filter(
-        j =>
-        j.categorie==="BABY"
-      )
-      .length,
+    college: joueurs.filter((j) => j.categorie === "College").length,
 
-
-    primaire:
-      joueurs.filter(
-        j =>
-        j.categorie==="Primaire"
-      )
-      .length,
-
-
-    college:
-      joueurs.filter(
-        j =>
-        j.categorie==="College"
-      )
-      .length,
-
-
-    adultes:
-      joueurs.filter(
-        j =>
-        [
-          "Femme",
-          "Homme adulte"
-        ]
-        .includes(
-          j.categorie
-        )
-      )
-      .length
-
+    adultes: joueurs.filter((j) =>
+      ["Femme", "Homme adulte"].includes(j.categorie),
+    ).length,
   };
-
 }

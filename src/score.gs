@@ -1,4 +1,4 @@
- /**
+/**
  * ===========================================================
  * score.gs
  *
@@ -16,7 +16,6 @@
  * ===========================================================
  */
 
-
 /**
  * Poids par défaut
  *
@@ -24,71 +23,37 @@
  * remplacées par la feuille Config
  */
 const POIDS_DEFAUT = {
+  VOEU: 100,
 
-  VOEU:100,
+  NIVEAU: 90,
 
-  NIVEAU:90,
+  AGE: 80,
 
-  AGE:80,
+  CATEGORIE: 90,
 
-  CATEGORIE:90,
+  SEXE: 15,
 
-  SEXE:15,
-
-  NOUVEAU:10
-
+  NOUVEAU: 10,
 };
-
 
 /**
  * Charge les poids depuis Config
  */
-function obtenirPoids(config){
-
+function obtenirPoids(config) {
   return {
+    VOEU: 100,
 
-    VOEU:
-      100,
+    NIVEAU: lireNombre(config["Poids niveau"]) || POIDS_DEFAUT.NIVEAU,
 
-    NIVEAU:
-      lireNombre(
-        config["Poids niveau"]
-      )
-      ||
-      POIDS_DEFAUT.NIVEAU,
+    AGE: lireNombre(config["Poids age"]) || POIDS_DEFAUT.AGE,
 
+    CATEGORIE: lireNombre(config["Poids catégorie"]) || POIDS_DEFAUT.CATEGORIE,
 
-    AGE:
-      lireNombre(
-        config["Poids age"]
-      )
-      ||
-      POIDS_DEFAUT.AGE,
+    SEXE: lireNombre(config["Poids sexe"]) || POIDS_DEFAUT.SEXE,
 
-
-    CATEGORIE:
-      lireNombre(
-        config["Poids catégorie"]
-      )
-      ||
-      POIDS_DEFAUT.CATEGORIE,
-
-
-    SEXE:
-      lireNombre(
-        config["Poids sexe"]
-      )
-      ||
-      POIDS_DEFAUT.SEXE,
-
-
-    NOUVEAU:
-      POIDS_DEFAUT.NOUVEAU
-
+    NOUVEAU: POIDS_DEFAUT.NOUVEAU,
   };
-
 }
-
 
 /**
  * ===========================================================
@@ -99,102 +64,47 @@ function obtenirPoids(config){
  * convient à un joueur.
  *
  */
-function calculerScoreAffectation(
-  joueur,
-  creneau,
-  poids
-){
-
-  let score=0;
-
+function calculerScoreAffectation(joueur, creneau, poids) {
+  let score = 0;
 
   /*
     1) Satisfaction du voeu
   */
 
-  score +=
-    scoreVoeu(
-      joueur,
-      creneau
-    )
-    *
-    poids.VOEU;
-
-
+  score += scoreVoeu(joueur, creneau) * poids.VOEU;
 
   /*
     2) Catégorie
   */
 
-  score +=
-    scoreCategorie(
-      joueur,
-      creneau
-    )
-    *
-    poids.CATEGORIE;
-
-
+  score += scoreCategorie(joueur, creneau) * poids.CATEGORIE;
 
   /*
     3) Age
   */
 
-  score +=
-    scoreAge(
-      joueur,
-      creneau
-    )
-    *
-    poids.AGE;
-
-
+  score += scoreAge(joueur, creneau) * poids.AGE;
 
   /*
     4) Niveau
   */
 
-  score +=
-    scoreNiveau(
-      joueur,
-      creneau
-    )
-    *
-    poids.NIVEAU;
-
-
+  score += scoreNiveau(joueur, creneau) * poids.NIVEAU;
 
   /*
     5) Sexe
   */
 
-  score +=
-    scoreSexe(
-      joueur,
-      creneau
-    )
-    *
-    poids.SEXE;
-
-
+  score += scoreSexe(joueur, creneau) * poids.SEXE;
 
   /*
     6) Nouveau adhérent
   */
 
-  score +=
-    scoreNouveau(
-      joueur
-    )
-    *
-    poids.NOUVEAU;
-
+  score += scoreNouveau(joueur) * poids.NOUVEAU;
 
   return score;
-
 }
-
-
 
 /**
  * ===========================================================
@@ -205,24 +115,12 @@ function calculerScoreAffectation(
  * Deuxième choix = 0.8
  * etc.
  */
-function scoreVoeu(
-  joueur,
-  creneau
-){
+function scoreVoeu(joueur, creneau) {
+  const position = joueur.voeux.indexOf(creneau.nom);
 
-  const position =
-    joueur.voeux
-    .indexOf(
-      creneau.nom
-    );
+  if (position === -1) return 0;
 
-
-  if(position===-1)
-    return 0;
-
-
-  switch(position){
-
+  switch (position) {
     case 0:
       return 1;
 
@@ -237,51 +135,28 @@ function scoreVoeu(
 
     case 4:
       return 0.2;
-
   }
 
-
   return 0;
-
 }
-
 
 /**
  * ===========================================================
  * CATEGORIE
  * ===========================================================
  */
-function scoreCategorie(
-  joueur,
-  creneau
-){
-
-  if(
-    joueur.categorie
-    ===
-    creneau.categorie
-  )
-    return 1;
-
+function scoreCategorie(joueur, creneau) {
+  if (joueur.categorie === creneau.categorie) return 1;
 
   /*
     Cas jeunes :
     interdit
   */
 
-  if(
-    estJeune(
-      joueur
-    )
-  )
-    return -1;
-
-
+  if (estJeune(joueur)) return -1;
 
   return 0;
-
 }
-
 
 /**
  * ===========================================================
@@ -298,120 +173,60 @@ function scoreCategorie(
  * => presque ignoré
  *
  */
-function scoreAge(
-  joueur,
-  creneau
-){
-
-  if(
-    !estJeune(joueur)
-  )
-    return 1;
-
+function scoreAge(joueur, creneau) {
+  if (!estJeune(joueur)) return 1;
 
   /*
     Pour un créneau vide,
     pas encore de groupe
   */
 
-  if(
-    creneau.joueurs.length===0
-  )
-    return 1;
+  if (creneau.joueurs.length === 0) return 1;
 
+  const ageMoyen = moyenne(creneau.joueurs, (j) => j.age);
 
-
-  const ageMoyen =
-    moyenne(
-      creneau.joueurs,
-      j=>j.age
-    );
-
-
-  const ecart =
-    Math.abs(
-      joueur.age
-      -
-      ageMoyen
-    );
-
-
+  const ecart = Math.abs(joueur.age - ageMoyen);
 
   /*
     BABY
   */
 
-  if(
-    joueur.categorie==="BABY"
-  ){
+  if (joueur.categorie === "BABY") {
+    if (ecart <= 1) return 1;
 
-    if(ecart<=1)
-      return 1;
-
-
-    if(ecart<=2)
-      return 0.5;
-
+    if (ecart <= 2) return 0.5;
 
     return -1;
-
   }
-
-
 
   /*
     Primaire
   */
 
-  if(
-    joueur.categorie==="Primaire"
-  ){
+  if (joueur.categorie === "Primaire") {
+    if (ecart <= 1) return 1;
 
-    if(ecart<=1)
-      return 1;
+    if (ecart <= 2) return 0.6;
 
-
-    if(ecart<=2)
-      return 0.6;
-
-
-    if(ecart<=3)
-      return 0.2;
-
+    if (ecart <= 3) return 0.2;
 
     return -1;
-
   }
-
-
 
   /*
     College
   */
 
-  if(
-    joueur.categorie==="College"
-  ){
+  if (joueur.categorie === "College") {
+    if (ecart <= 2) return 1;
 
-    if(ecart<=2)
-      return 1;
-
-
-    if(ecart<=3)
-      return 0.5;
-
+    if (ecart <= 3) return 0.5;
 
     return -1;
-
   }
 
-
-
   return 1;
-
 }
-
-
 
 /**
  * ===========================================================
@@ -420,83 +235,33 @@ function scoreAge(
  *
  * Favorise les groupes homogènes
  */
-function scoreNiveau(
-  joueur,
-  creneau
-){
+function scoreNiveau(joueur, creneau) {
+  if (creneau.joueurs.length === 0) return 1;
 
-  if(
-    creneau.joueurs.length===0
-  )
-    return 1;
+  const niveauMoy = niveauMoyen(creneau.joueurs);
 
+  const ecart = Math.abs(joueur.niveau - niveauMoy);
 
+  if (ecart === 0) return 1;
 
-  const niveauMoy =
-    niveauMoyen(
-      creneau.joueurs
-    );
+  if (ecart <= 2) return 0.8;
 
-
-  const ecart =
-    Math.abs(
-      joueur.niveau
-      -
-      niveauMoy
-    );
-
-
-
-  if(ecart===0)
-    return 1;
-
-
-  if(ecart<=2)
-    return 0.8;
-
-
-  if(ecart<=4)
-    return 0.4;
-
+  if (ecart <= 4) return 0.4;
 
   return 0;
-
 }
-
-
 
 /**
  * ===========================================================
  * SEXE
  * ===========================================================
  */
-function scoreSexe(
-  joueur,
-  creneau
-){
+function scoreSexe(joueur, creneau) {
+  if (creneau.joueurs.length === 0) return 1;
 
-  if(
-    creneau.joueurs.length===0
-  )
-    return 1;
+  const femmes = creneau.joueurs.filter((j) => j.sexe === "F").length;
 
-
-  const femmes =
-    creneau.joueurs
-    .filter(
-      j=>j.sexe==="F"
-    )
-    .length;
-
-
-  const hommes =
-    creneau.joueurs
-    .filter(
-      j=>j.sexe==="H"
-    )
-    .length;
-
-
+  const hommes = creneau.joueurs.filter((j) => j.sexe === "H").length;
 
   /*
     On évite les groupes
@@ -504,46 +269,21 @@ function scoreSexe(
     uniquement pour les catégories mixtes
   */
 
-  if(
-    joueur.sexe==="F"
-    &&
-    femmes===0
-  )
-    return 0.5;
+  if (joueur.sexe === "F" && femmes === 0) return 0.5;
 
-
-  if(
-    joueur.sexe==="H"
-    &&
-    hommes===0
-  )
-    return 0.5;
-
+  if (joueur.sexe === "H" && hommes === 0) return 0.5;
 
   return 1;
-
 }
-
-
 
 /**
  * ===========================================================
  * NOUVEAUX
  * ===========================================================
  */
-function scoreNouveau(
-  joueur
-){
-
-  return joueur.nouveau
-    ?
-    1
-    :
-    0;
-
+function scoreNouveau(joueur) {
+  return joueur.nouveau ? 1 : 0;
 }
-
-
 
 /**
  * ===========================================================
@@ -554,82 +294,32 @@ function scoreNouveau(
  * utilisera cette fonction.
  *
  */
-function calculerScoreGroupe(
-  groupe
-){
+function calculerScoreGroupe(groupe) {
+  if (!groupe || groupe.length === 0) return 0;
 
-  if(
-    !groupe ||
-    groupe.length===0
-  )
-    return 0;
-
-
-
-  let score=100;
-
-
+  let score = 100;
 
   /*
     Homogénéité âge
   */
 
-  if(
-    estJeune(
-      groupe[0]
-    )
-  ){
-
-    score -=
-      ecartType(
-        groupe,
-        j=>j.age
-      )
-      *
-      30;
-
+  if (estJeune(groupe[0])) {
+    score -= ecartType(groupe, (j) => j.age) * 30;
   }
-
-
 
   /*
     Homogénéité niveau
   */
 
-  score -=
-    dispersionNiveau(
-      groupe
-    )
-    *
-    20;
-
-
+  score -= dispersionNiveau(groupe) * 20;
 
   return score;
-
 }
-
-
 
 /**
  * Détermine si un joueur
  * appartient aux jeunes
  */
-function estJeune(
-  joueur
-){
-
-  return [
-
-    "BABY",
-
-    "Primaire",
-
-    "College"
-
-  ]
-  .includes(
-    joueur.categorie
-  );
-
+function estJeune(joueur) {
+  return ["BABY", "Primaire", "College"].includes(joueur.categorie);
 }

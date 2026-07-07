@@ -14,7 +14,6 @@
  * ===========================================================
  */
 
-
 /**
  * Table officielle simplifiée FFT
  *
@@ -30,55 +29,52 @@
  *
  */
 const TABLE_CLASSEMENT_FFT = {
+  NC: 0,
 
-  "NC":0,
+  40: 1,
 
-  "40":1,
+  "30/5": 2,
 
-  "30/5":2,
+  "30/4": 3,
 
-  "30/4":3,
+  "30/3": 4,
 
-  "30/3":4,
+  "30/2": 5,
 
-  "30/2":5,
+  "30/1": 6,
 
-  "30/1":6,
+  30: 7,
 
-  "30":7,
+  "15/5": 8,
 
-  "15/5":8,
+  "15/4": 9,
 
-  "15/4":9,
+  "15/3": 10,
 
-  "15/3":10,
+  "15/2": 11,
 
-  "15/2":11,
+  "15/1": 12,
 
-  "15/1":12,
+  15: 13,
 
-  "15":13,
+  "5/6": 14,
 
-  "5/6":14,
+  "4/6": 15,
 
-  "4/6":15,
+  "3/6": 16,
 
-  "3/6":16,
+  "2/6": 17,
 
-  "2/6":17,
+  "1/6": 18,
 
-  "1/6":18,
+  0: 19,
 
-  "0":19,
+  "-2/6": 20,
 
-  "-2/6":20,
+  "-4/6": 21,
 
-  "-4/6":21,
-
-  "-15":22
-
+  "-15": 22,
 };
-
 
 /**
  * Convertit un classement FFT
@@ -92,41 +88,19 @@ const TABLE_CLASSEMENT_FFT = {
  * 5
  *
  */
-function convertirClassement(
-  classement
-){
+function convertirClassement(classement) {
+  if (!classement) return 0;
 
-  if(!classement)
-    return 0;
+  const c = String(classement).trim().toUpperCase().replace(/\s+/g, "");
 
-
-  const propre =
-    nettoyerClassement(
-      classement
-    )
-    .toUpperCase();
-
-
-  if(
-    TABLE_CLASSEMENT_FFT[
-      propre
-    ]
-    !==undefined
-  ){
-
-    return TABLE_CLASSEMENT_FFT[
-      propre
-    ];
-
+  if (CLASSEMENTS_FFT[c] !== undefined) {
+    return CLASSEMENTS_FFT[c];
   }
 
+  Logger.log("Classement inconnu : " + classement);
 
-  return analyserClassementSpecial(
-    propre
-  );
-
+  return 0;
 }
-
 
 /**
  * Analyse des cas particuliers
@@ -134,99 +108,54 @@ function convertirClassement(
  * Permet d'être robuste avec
  * des données Ten'Up ou Excel
  */
-function analyserClassementSpecial(
-  valeur
-){
-
-  if(valeur==="")
-    return 0;
-
+function analyserClassementSpecial(valeur) {
+  if (valeur === "") return 0;
 
   /*
    Gestion classement écrit
    avec espaces
   */
 
-  const clean =
-    valeur
-    .replace(/\s/g,"");
+  const clean = valeur.replace(/\s/g, "");
 
-
-  if(
-    TABLE_CLASSEMENT_FFT[
-      clean
-    ]!==undefined
-  ){
-
-    return TABLE_CLASSEMENT_FFT[
-      clean
-    ];
-
+  if (TABLE_CLASSEMENT_FFT[clean] !== undefined) {
+    return TABLE_CLASSEMENT_FFT[clean];
   }
-
 
   /*
     Classements négatifs
   */
 
-  if(
-    clean.startsWith("-")
-  ){
+  if (clean.startsWith("-")) {
+    const nombre = Number(clean.replace("/6", ""));
 
-    const nombre =
-      Number(
-        clean
-        .replace("/6","")
-      );
-
-
-    if(!isNaN(nombre))
-      return 20 + Math.abs(nombre);
-
+    if (!isNaN(nombre)) return 20 + Math.abs(nombre);
   }
-
 
   /*
     Par sécurité :
     classement inconnu
   */
 
-  Logger.log(
-    "Classement inconnu : "
-    +
-    valeur
-  );
-
+  Logger.log("Classement inconnu : " + valeur);
 
   return 0;
-
 }
-
 
 /**
  * Ajoute le niveau numérique
  * à tous les joueurs
  */
-function enrichirNiveau(
-  joueurs
-){
 
-  joueurs.forEach(
-    joueur=>{
+function enrichirNiveau(joueurs) {
+  joueurs.forEach((joueur) => {
+    joueur.classement = nettoyerClassement(joueur.classement);
 
-      joueur.niveau =
-        convertirClassement(
-          joueur.classement
-        );
-
-    }
-  );
-
+    joueur.niveau = convertirClassement(joueur.classement);
+  });
 
   return joueurs;
-
 }
-
 
 /**
  * Compare deux joueurs
@@ -239,53 +168,25 @@ function enrichirNiveau(
  * négatif :
  * joueur B plus fort
  */
-function comparerNiveau(
-  joueurA,
-  joueurB
-){
-
-  return
-    joueurA.niveau
-    -
-    joueurB.niveau;
-
+function comparerNiveau(joueurA, joueurB) {
+  return;
+  joueurA.niveau - joueurB.niveau;
 }
-
 
 /**
  * Retourne l'écart
  * entre deux joueurs
  */
-function ecartNiveau(
-  joueurA,
-  joueurB
-){
-
-  return Math.abs(
-
-    joueurA.niveau
-    -
-    joueurB.niveau
-
-  );
-
+function ecartNiveau(joueurA, joueurB) {
+  return Math.abs(joueurA.niveau - joueurB.niveau);
 }
-
 
 /**
  * Niveau moyen d'un groupe
  */
-function niveauMoyen(
-  joueurs
-){
-
-  return moyenne(
-    joueurs,
-    j=>j.niveau
-  );
-
+function niveauMoyen(joueurs) {
+  return moyenne(joueurs, (j) => j.niveau);
 }
-
 
 /**
  * Ecart de niveau
@@ -293,44 +194,21 @@ function niveauMoyen(
  * Plus le résultat est faible
  * plus le groupe est homogène
  */
-function dispersionNiveau(
-  joueurs
-){
-
-  return ecartType(
-    joueurs,
-    j=>j.niveau
-  );
-
+function dispersionNiveau(joueurs) {
+  return ecartType(joueurs, (j) => j.niveau);
 }
-
 
 /**
  * Retourne un libellé
  * depuis une valeur numérique
  */
-function libelleClassement(
-  niveau
-){
+function libelleClassement(niveau) {
+  const entree = Object.entries(TABLE_CLASSEMENT_FFT).find(
+    ([nom, valeur]) => valeur === niveau,
+  );
 
-  const entree =
-    Object.entries(
-      TABLE_CLASSEMENT_FFT
-    )
-    .find(
-      ([nom,valeur]) =>
-        valeur===niveau
-    );
-
-
-  return entree
-    ?
-    entree[0]
-    :
-    "NC";
-
+  return entree ? entree[0] : "NC";
 }
-
 
 /**
  * Vérifie si deux joueurs
@@ -339,23 +217,9 @@ function libelleClassement(
  * Utilisé plus tard
  * dans le score
  */
-function niveauCompatible(
-  joueurA,
-  joueurB,
-  ecartMax
-){
-
-  return (
-    ecartNiveau(
-      joueurA,
-      joueurB
-    )
-    <=
-    ecartMax
-  );
-
+function niveauCompatible(joueurA, joueurB, ecartMax) {
+  return ecartNiveau(joueurA, joueurB) <= ecartMax;
 }
-
 
 /**
  * Retourne une pénalité
@@ -363,84 +227,46 @@ function niveauCompatible(
  *
  * Utilisé dans score.gs
  */
-function penaliteNiveau(
-  joueurA,
-  joueurB
-){
-
-  const ecart =
-    ecartNiveau(
-      joueurA,
-      joueurB
-    );
-
+function penaliteNiveau(joueurA, joueurB) {
+  const ecart = ecartNiveau(joueurA, joueurB);
 
   /*
     même niveau
   */
-  if(ecart===0)
-    return 0;
-
+  if (ecart === 0) return 0;
 
   /*
     1 classement d'écart
   */
-  if(ecart===1)
-    return 5;
-
+  if (ecart === 1) return 5;
 
   /*
     2 classements
   */
-  if(ecart===2)
-    return 20;
-
+  if (ecart === 2) return 20;
 
   /*
     grand écart
   */
-  return 50 + ecart*10;
-
+  return 50 + ecart * 10;
 }
-
 
 /**
  * Classement minimum
  * d'un groupe
  */
-function niveauMinimum(
-  joueurs
-){
+function niveauMinimum(joueurs) {
+  if (!joueurs.length) return 0;
 
-  if(!joueurs.length)
-    return 0;
-
-
-  return Math.min(
-    ...joueurs.map(
-      j=>j.niveau
-    )
-  );
-
+  return Math.min(...joueurs.map((j) => j.niveau));
 }
-
 
 /**
  * Classement maximum
  * d'un groupe
  */
-function niveauMaximum(
-  joueurs
-){
+function niveauMaximum(joueurs) {
+  if (!joueurs.length) return 0;
 
-  if(!joueurs.length)
-    return 0;
-
-
-  return Math.max(
-    ...joueurs.map(
-      j=>j.niveau
-    )
-  );
-
+  return Math.max(...joueurs.map((j) => j.niveau));
 }
