@@ -121,7 +121,13 @@ function lancerExport() {
 
   const joueurs = enrichirJoueurs(contexte.joueurs);
 
-  const creneaux = affecterJoueurs(joueurs, contexte.creneaux, contexte.config);
+  let creneaux = chargerGroupesDepuisFeuille(joueurs, contexte.creneaux);
+
+  const totalJoueurs = creneaux.reduce((total, c) => total + (c.joueurs?.length || 0), 0);
+
+  if (totalJoueurs === 0) {
+    creneaux = affecterJoueurs(joueurs, contexte.creneaux, contexte.config);
+  }
 
   exporterGroupes(creneaux);
 }
@@ -136,7 +142,13 @@ function lancerStatistiques() {
 
   const joueurs = enrichirJoueurs(contexte.joueurs);
 
-  const creneaux = affecterJoueurs(joueurs, contexte.creneaux, contexte.config);
+  let creneaux = chargerGroupesDepuisFeuille(joueurs, contexte.creneaux);
+
+  const totalJoueurs = creneaux.reduce((total, c) => total + (c.joueurs?.length || 0), 0);
+
+  if (totalJoueurs === 0) {
+    creneaux = affecterJoueurs(joueurs, contexte.creneaux, contexte.config);
+  }
 
   const stats = genererStatistiques(joueurs, creneaux);
 
@@ -148,6 +160,80 @@ function lancerStatistiques() {
  * DIAGNOSTIC
  * ===========================================================
  */
+function validerRepartition() {
+  const contexte = chargerContexte();
+
+  const joueurs = enrichirJoueurs(contexte.joueurs);
+
+  const creneaux = chargerGroupesDepuisFeuille(joueurs, contexte.creneaux);
+
+  if (!creneaux || creneaux.length === 0) {
+    SpreadsheetApp.getActive().toast(
+      "Aucun groupe trouvé dans l'onglet Groupes pour validation.",
+    );
+    return;
+  }
+
+  const stats = genererStatistiques(joueurs, creneaux);
+
+  exporterStatistiques(stats);
+
+  SpreadsheetApp.getActive().toast("Validation terminée. Statistiques mises à jour.");
+}
+
+function relancerRepartition() {
+  initialiserJournal();
+  debutChrono("REPARTITION_REPLAY");
+  journalInfo("REPLAY", "Début replay de la répartition");
+  SpreadsheetApp.getActive().toast("Rejeu de la répartition en cours...");
+
+  const contexte = chargerContexte();
+
+  const joueurs = enrichirJoueurs(contexte.joueurs);
+
+  const creneaux = initialiserGroupesV2(contexte.creneaux);
+
+  chargerGroupesDepuisFeuille(joueurs, creneaux, { onlyFixed: true });
+
+  const resultat = affecterJoueursV2(joueurs, creneaux, contexte.config);
+
+  const groupes = resultat.creneaux;
+
+  optimiserRepartition(groupes, { iterations: 500 });
+
+  exporterGroupes(groupes);
+
+  const stats = genererStatistiques(joueurs, groupes);
+
+  exporterStatistiques(stats);
+
+  exporterRapport(groupes, stats);
+
+  SpreadsheetApp.getActive().toast("Rejeu terminé.");
+
+  finChrono("REPARTITION_REPLAY");
+}
+
+function lancerRapports() {
+  const contexte = chargerContexte();
+
+  const joueurs = enrichirJoueurs(contexte.joueurs);
+
+  let creneaux = chargerGroupesDepuisFeuille(joueurs, contexte.creneaux);
+
+  const totalJoueurs = creneaux.reduce((total, c) => total + (c.joueurs?.length || 0), 0);
+
+  if (totalJoueurs === 0) {
+    creneaux = affecterJoueurs(joueurs, contexte.creneaux, contexte.config);
+  }
+
+  const stats = genererStatistiques(joueurs, creneaux);
+
+  exporterRapport(creneaux, stats);
+
+  SpreadsheetApp.getActive().toast("Rapport généré.");
+}
+
 function diagnosticDonnees() {
   const contexte = chargerContexte();
 
@@ -169,6 +255,126 @@ function afficherErreurs(erreurs) {
   const ui = SpreadsheetApp.getUi();
 
   ui.alert("Erreurs détectées", erreurs.join("\n"), ui.ButtonSet.OK);
+}
+
+function chargerGroupesDepuisFeuille(joueurs, creneaux, options) {
+  options = options || {};
+
+  const feuille = SpreadsheetApp.getActive().getSheetByName(SHEETS.GROUPES);
+
+  if (!feuille) {
+    return creneaux;
+  }
+
+  const data = feuille.getDataRange().getValues();
+
+  if (!data || data.length < 2) {
+    return creneaux;
+  }
+
+  const index = construireIndex(data[0]);
+
+  const joueursParLicence = {};
+  const joueursParIdentite = {};
+
+  joueurs.forEach((joueur) => {
+    joueur.affectation = null;
+    joueur.verrouille = false;
+
+    if (joueur.licence) {
+      joueursParLicence[joueur.licence.toString().trim().toLowerCase()] = joueur;
+    }
+
+    const cle = (
+      joueur.nom + "|" + joueur.prenom + "|" + joueur.categorie
+    )
+      .toLowerCase()
+      .trim();
+
+    if (!joueursParIdentite[cle]) {
+      joueursParIdentite[cle] = [];
+    }
+
+    joueursParIdentite[cle].push(joueur);
+  });
+
+  creneaux.forEach((c) => {
+    c.joueurs = [];
+  });
+
+  data.slice(1).forEach((ligne) => {
+    if (ligneVide(ligne)) return;
+
+    const nomCreneau = lireTexte(ligne[index["Créneau"]]);
+
+    if (!nomCreneau) return;
+
+    const licence = lireTexte(ligne[index["Licence"]]);
+    const nom = lireTexte(ligne[index["Nom"]]);
+    const prenom = lireTexte(ligne[index["Prénom"]]);
+    const categorie = lireTexte(ligne[index["Catégorie"]]);
+    const fixe = lireTexte(ligne[index["Fixé"]]).toLowerCase();
+
+    const estFixe = ["oui", "true", "1", "x"].includes(fixe);
+
+    if (options.onlyFixed && !estFixe) return;
+
+    if (!nom && !prenom && !licence) return;
+
+    const joueur = trouverJoueurDansListe(
+      joueursParLicence,
+      joueursParIdentite,
+      licence,
+      nom,
+      prenom,
+      categorie,
+    );
+
+    if (!joueur) return;
+
+    const creneau = creneaux.find((c) => c.nom === nomCreneau);
+
+    if (!creneau) return;
+
+    joueur.affectation = nomCreneau;
+    joueur.verrouille = estFixe;
+    creneau.joueurs.push(joueur);
+  });
+
+  return creneaux;
+}
+
+function trouverJoueurDansListe(
+  joueursParLicence,
+  joueursParIdentite,
+  licence,
+  nom,
+  prenom,
+  categorie,
+) {
+  if (licence) {
+    const cleLicence = licence.toString().trim().toLowerCase();
+
+    if (joueursParLicence[cleLicence]) {
+      return joueursParLicence[cleLicence];
+    }
+  }
+
+  if (!nom || !prenom) {
+    return null;
+  }
+
+  const cleIdentite = (nom + "|" + prenom + "|" + categorie)
+    .toLowerCase()
+    .trim();
+
+  const candidats = joueursParIdentite[cleIdentite];
+
+  if (!candidats || candidats.length === 0) {
+    return null;
+  }
+
+  return candidats.shift();
 }
 
 /**

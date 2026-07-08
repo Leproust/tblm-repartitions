@@ -92,7 +92,9 @@ function construireTableauExport(
 
     "Compétition",
 
-    "Nouveau"
+    "Nouveau",
+
+    "Fixé"
 
   ]);
 
@@ -117,6 +119,8 @@ function construireTableauExport(
           creneau.categorie,
 
           "Aucun joueur",
+
+          "",
 
           "",
 
@@ -171,6 +175,12 @@ function construireTableauExport(
               "Non",
 
             joueur.nouveau
+              ?
+              "Oui"
+              :
+              "Non",
+
+            joueur.verrouille
               ?
               "Oui"
               :

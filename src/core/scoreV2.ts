@@ -25,7 +25,9 @@ const POIDS_SCORE_V2 = {
 
   AGE: 300,
 
-  NIVEAU: 200,
+  NIVEAU: 180,
+
+  COMPETITION: 150,
 
   EQUILIBRE: 100,
 
@@ -39,6 +41,10 @@ function lirePoidsConfig(config) {
 
   if (typeof config["Poids niveau"] === "number") {
     poids.NIVEAU = config["Poids niveau"];
+  }
+
+  if (typeof config["Poids competition"] === "number") {
+    poids.COMPETITION = config["Poids competition"];
   }
 
   if (typeof config["Poids age"] === "number") {
@@ -94,7 +100,12 @@ function calculerScoreV2(joueur, creneau, config) {
   score += scoreNiveauV2(joueur, creneau) * poids.NIVEAU;
 
   /*
-    4) Equilibre groupe
+    4) Compétition adultes
+  */
+  score += scoreCompetitionV2(joueur, creneau) * poids.COMPETITION;
+
+  /*
+    5) Equilibre groupe
   */
 
   score += scoreEquilibreV2(joueur, creneau) * poids.EQUILIBRE;
@@ -203,10 +214,42 @@ function scoreNiveauV2(joueur, creneau) {
 
   const ecart = Math.abs(joueur.niveau - niveauMoyen);
 
-  if (ecart === 0) return 1;
+  if (estJeune(joueur)) {
+    if (ecart <= 2) return 1;
+    if (ecart <= 4) return 0.6;
+    return 0;
+  }
 
-  if (ecart <= 2) return 0.8;
+  if (joueur.competition) {
+    if (ecart <= 1) return 1;
+    if (ecart <= 2) return 0.9;
+    if (ecart <= 3) return 0.6;
+    if (ecart <= 4) return 0.3;
+    return 0;
+  }
 
+  if (ecart <= 2) return 1;
+  if (ecart <= 4) return 0.7;
+  if (ecart <= 6) return 0.4;
+  return 0;
+}
+
+function scoreCompetitionV2(joueur, creneau) {
+  if (estJeune(joueur) || !joueur.competition) {
+    return 0;
+  }
+
+  if (creneau.joueurs.length === 0) {
+    return 0.5;
+  }
+
+  const niveauMoyen = moyenne(creneau.joueurs, (j) => j.niveau);
+
+  const ecart = Math.abs(joueur.niveau - niveauMoyen);
+
+  if (ecart <= 1) return 1;
+  if (ecart <= 2) return 0.9;
+  if (ecart <= 3) return 0.7;
   if (ecart <= 4) return 0.4;
 
   return 0;

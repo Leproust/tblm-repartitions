@@ -20,6 +20,7 @@ function affectationPossible(joueur, creneau) {
     creneauActif(creneau) &&
     categorieCompatible(joueur, creneau) &&
     voeuCompatible(joueur, creneau) &&
+    competitionCompatible(joueur, creneau) &&
     capaciteDisponible(creneau) &&
     ageCompatible(joueur, creneau)
   );
@@ -107,21 +108,41 @@ function categorieCompatible(joueur, creneau) {
 function voeuCompatible(joueur, creneau) {
   /*
       Adultes :
-      uniquement leurs voeux
+      si des voeux sont renseignés, on les respecte.
+      sinon on laisse la place à tout créneau valide.
   */
 
   if (joueur.categorie === "Homme adulte" || joueur.categorie === "Femme") {
+    if (!joueur.voeux || joueur.voeux.length === 0) {
+      return true;
+    }
+
     return joueur.voeux.includes(creneau.nom);
   }
 
   /*
       Jeunes :
-
-      on autorise les autres
-      créneaux de la catégorie.
+      on autorise les autres créneaux de la catégorie.
   */
 
   return true;
+}
+
+/**
+ * -----------------------------------------------------------
+ * Compatibilité compétition adultes
+ * -----------------------------------------------------------
+ */
+function competitionCompatible(joueur, creneau) {
+  if (estJeune(joueur)) {
+    return true;
+  }
+
+  if (!joueur.competition) {
+    return creneau.joueurs.every((j) => j.competition !== true);
+  }
+
+  return creneau.joueurs.every((j) => j.competition === true);
 }
 
 /**

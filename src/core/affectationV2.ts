@@ -80,6 +80,10 @@ function affecterJoueursV2(joueurs, creneaux, config) {
   const sansSolution = [];
 
   joueursTries.forEach((joueur) => {
+    if (estVerrouille(joueur)) {
+      return;
+    }
+
     const ok = affecterUnJoueurV2(joueur, creneaux, config);
 
     if (!ok) {
@@ -103,7 +107,7 @@ function affecterJoueursV2(joueurs, creneaux, config) {
  */
 function initialiserGroupesV2(creneaux) {
   return creneaux.map((c) => {
-    c.joueurs = [];
+    c.joueurs = c.joueurs || [];
 
     return c;
   });
