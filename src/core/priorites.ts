@@ -45,23 +45,23 @@ function calculerPrioriteJoueur(joueur, creneaux, config) {
    */
 
   switch (joueur.categorie) {
-    case "Homme adulte":
+    case CATEGORIES.HOMME_ADULTE:
       priorite += 50;
       break;
 
-    case "Femme":
+    case CATEGORIES.FEMME:
       priorite += 50;
       break;
 
-    case "BABY":
+    case CATEGORIES.BABY:
       priorite += 40;
       break;
 
-    case "Primaire":
+    case CATEGORIES.PRIMAIRE:
       priorite += 30;
       break;
 
-    case "College":
+    case CATEGORIES.COLLEGE:
       priorite += 20;
       break;
   }

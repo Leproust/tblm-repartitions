@@ -31,6 +31,7 @@ var SHEETS = {
   STATISTIQUES: "Statistiques",
   SANS_SOLUTION: "Sans solution",
   SANS_CRENEAU: "Sans créneau",
+  RAPPORT: "Rapport",
 };
 
 var VOEUX = [

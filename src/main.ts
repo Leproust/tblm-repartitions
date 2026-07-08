@@ -55,6 +55,7 @@ function lancerRepartition() {
 
   optimiserRepartition(creneaux, {
     iterations: 500,
+    config: contexte.config,
   });
 
   journalInfo("AFFECTATION", "Groupes créés", creneaux.length);
@@ -104,7 +105,7 @@ function lancerOptimisation() {
 
   const creneaux = resultat.creneaux;
 
-  optimisationComplete(creneaux);
+  optimisationComplete(creneaux, contexte.config);
 
   exporterGroupes(creneaux);
 
@@ -199,7 +200,7 @@ function relancerRepartition() {
 
   const groupes = resultat.creneaux;
 
-  optimiserRepartition(groupes, { iterations: 500 });
+  optimiserRepartition(groupes, { iterations: 500, config: contexte.config });
 
   exporterGroupes(groupes);
 
@@ -257,8 +258,7 @@ function afficherErreurs(erreurs) {
   ui.alert("Erreurs détectées", erreurs.join("\n"), ui.ButtonSet.OK);
 }
 
-function chargerGroupesDepuisFeuille(joueurs, creneaux, options) {
-  options = options || {};
+function chargerGroupesDepuisFeuille(joueurs, creneaux, options: { onlyFixed?: boolean } = {}) {
 
   const feuille = SpreadsheetApp.getActive().getSheetByName(SHEETS.GROUPES);
 

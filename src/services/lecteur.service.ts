@@ -271,16 +271,16 @@ function normaliserCategorie(categorie) {
 
   const valeur = categorie.toString().trim().toLowerCase();
 
-  if (valeur.includes("baby")) return "BABY";
+  if (valeur.includes("baby")) return CATEGORIES.BABY;
 
-  if (valeur.includes("primaire")) return "Primaire";
+  if (valeur.includes("primaire")) return CATEGORIES.PRIMAIRE;
 
   if (valeur.includes("college") || valeur.includes("collège"))
-    return "College";
+    return CATEGORIES.COLLEGE;
 
-  if (valeur.includes("femme")) return "Femme";
+  if (valeur.includes("femme")) return CATEGORIES.FEMME;
 
-  if (valeur.includes("homme")) return "Homme adulte";
+  if (valeur.includes("homme")) return CATEGORIES.HOMME_ADULTE;
 
   return categorie;
 }
@@ -364,14 +364,14 @@ function statistiquesLecture(joueurs) {
   return {
     total: joueurs.length,
 
-    baby: joueurs.filter((j) => j.categorie === "BABY").length,
+    baby: joueurs.filter((j) => j.categorie === CATEGORIES.BABY).length,
 
-    primaire: joueurs.filter((j) => j.categorie === "Primaire").length,
+    primaire: joueurs.filter((j) => j.categorie === CATEGORIES.PRIMAIRE).length,
 
-    college: joueurs.filter((j) => j.categorie === "College").length,
+    college: joueurs.filter((j) => j.categorie === CATEGORIES.COLLEGE).length,
 
     adultes: joueurs.filter((j) =>
-      ["Femme", "Homme adulte"].includes(j.categorie),
+      [CATEGORIES.FEMME, CATEGORIES.HOMME_ADULTE].includes(j.categorie),
     ).length,
   };
 }

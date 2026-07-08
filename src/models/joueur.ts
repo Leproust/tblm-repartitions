@@ -111,17 +111,8 @@ class Joueur {
   estJeune(){
 
 
-    return [
-
-      CATEGORIES.BABY,
-
-      CATEGORIES.PRIMAIRE,
-
-      CATEGORIES.COLLEGE
-
-
-    ].includes(
-      this.categorie
+    return estJeune(
+      this
     );
 
 

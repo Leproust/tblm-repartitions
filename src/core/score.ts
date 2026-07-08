@@ -45,6 +45,8 @@ const POIDS_DEFAUT = {
  */
 function obtenirPoids(config){
 
+  config = config || {};
+
   return {
 
     VOEU:
@@ -342,7 +344,7 @@ function scoreAge(
   */
 
   if(
-    joueur.categorie==="BABY"
+    joueur.categorie===CATEGORIES.BABY
   ){
 
     if(ecart<=1)
@@ -364,7 +366,7 @@ function scoreAge(
   */
 
   if(
-    joueur.categorie==="Primaire"
+    joueur.categorie===CATEGORIES.PRIMAIRE
   ){
 
     if(ecart<=1)
@@ -390,7 +392,7 @@ function scoreAge(
   */
 
   if(
-    joueur.categorie==="College"
+    joueur.categorie===CATEGORIES.COLLEGE
   ){
 
     if(ecart<=2)
@@ -606,30 +608,5 @@ function calculerScoreGroupe(
 
 
   return score;
-
-}
-
-
-
-/**
- * Détermine si un joueur
- * appartient aux jeunes
- */
-function estJeune(
-  joueur
-){
-
-  return [
-
-    "BABY",
-
-    "Primaire",
-
-    "College"
-
-  ]
-  .includes(
-    joueur.categorie
-  );
 
 }

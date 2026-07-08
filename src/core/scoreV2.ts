@@ -173,14 +173,14 @@ function scoreAgeV2(joueur, creneau) {
   const ecart = Math.abs(joueur.age - ageMoyen);
 
   switch (joueur.categorie) {
-    case "BABY":
+    case CATEGORIES.BABY:
       if (ecart <= 1) return 1;
 
       if (ecart <= 2) return 0.5;
 
       return 0;
 
-    case "Primaire":
+    case CATEGORIES.PRIMAIRE:
       if (ecart <= 1) return 1;
 
       if (ecart <= 2) return 0.7;
@@ -189,7 +189,7 @@ function scoreAgeV2(joueur, creneau) {
 
       return 0;
 
-    case "College":
+    case CATEGORIES.COLLEGE:
       if (ecart <= 2) return 1;
 
       if (ecart <= 3) return 0.5;

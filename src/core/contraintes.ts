@@ -29,10 +29,13 @@ function affectationPossible(joueur, creneau) {
 /**
  * -----------------------------------------------------------
  * Créneau actif
+ *
+ * Par défaut (champ absent/undefined), un créneau est actif.
+ * Il ne devient inactif que si `actif` vaut explicitement false.
  * -----------------------------------------------------------
  */
 function creneauActif(creneau) {
-  return !creneau.actif || creneau.actif === true || creneau.actif === "Oui";
+  return creneau.actif !== false;
 }
 
 /**
@@ -71,7 +74,7 @@ function categorieCompatible(joueur, creneau) {
       -> jamais de mélange
   */
 
-  if (joueur.categorie === "Homme adulte" || joueur.categorie === "Femme") {
+  if (joueur.categorie === CATEGORIES.HOMME_ADULTE || joueur.categorie === CATEGORIES.FEMME) {
     return false;
   }
 
@@ -79,8 +82,8 @@ function categorieCompatible(joueur, creneau) {
       BABY
   */
 
-  if (joueur.categorie === "BABY") {
-    return creneau.categorie === "BABY";
+  if (joueur.categorie === CATEGORIES.BABY) {
+    return creneau.categorie === CATEGORIES.BABY;
   }
 
   /*
@@ -89,12 +92,12 @@ function categorieCompatible(joueur, creneau) {
       se mélanger.
   */
 
-  if (joueur.categorie === "Primaire") {
-    return creneau.categorie === "Primaire" || creneau.categorie === "College";
+  if (joueur.categorie === CATEGORIES.PRIMAIRE) {
+    return creneau.categorie === CATEGORIES.PRIMAIRE || creneau.categorie === CATEGORIES.COLLEGE;
   }
 
-  if (joueur.categorie === "College") {
-    return creneau.categorie === "College" || creneau.categorie === "Primaire";
+  if (joueur.categorie === CATEGORIES.COLLEGE) {
+    return creneau.categorie === CATEGORIES.COLLEGE || creneau.categorie === CATEGORIES.PRIMAIRE;
   }
 
   return false;
@@ -112,7 +115,7 @@ function voeuCompatible(joueur, creneau) {
       sinon on laisse la place à tout créneau valide.
   */
 
-  if (joueur.categorie === "Homme adulte" || joueur.categorie === "Femme") {
+  if (joueur.categorie === CATEGORIES.HOMME_ADULTE || joueur.categorie === CATEGORIES.FEMME) {
     if (!joueur.voeux || joueur.voeux.length === 0) {
       return true;
     }
@@ -162,13 +165,13 @@ function ageCompatible(joueur, creneau) {
   const ecart = Math.abs(joueur.age - ageMoyen);
 
   switch (joueur.categorie) {
-    case "BABY":
+    case CATEGORIES.BABY:
       return ecart <= 1;
 
-    case "Primaire":
+    case CATEGORIES.PRIMAIRE:
       return ecart <= 2;
 
-    case "College":
+    case CATEGORIES.COLLEGE:
       return ecart <= 3;
   }
 

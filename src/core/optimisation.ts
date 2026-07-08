@@ -25,11 +25,19 @@
 
 /**
  * Point d'entrée optimisation
+ *
+ * `parametres.config` est la config chargée depuis la feuille Config.
+ * Elle est transmise aux calculs de score pour que les poids
+ * personnalisés par le club soient respectés pendant l'optimisation,
+ * pas seulement pendant l'affectation initiale.
  */
 function optimiserRepartition(creneaux, parametres) {
-  const iterations = parametres.iterations || 500;
+  parametres = parametres || {};
 
-  let scoreActuel = scoreAffectationTotale(creneaux);
+  const iterations = parametres.iterations || OPTIMISATION.iterations;
+  const config = parametres.config;
+
+  let scoreActuel = scoreAffectationTotale(creneaux, config);
 
   Logger.log("Score initial : " + scoreActuel);
 
@@ -37,7 +45,7 @@ function optimiserRepartition(creneaux, parametres) {
     const amelioration = tenterAmelioration(creneaux);
 
     if (amelioration) {
-      scoreActuel = scoreAffectationTotale(creneaux);
+      scoreActuel = scoreAffectationTotale(creneaux, config);
     }
   }
 
@@ -190,13 +198,13 @@ function echangePossible(joueur, groupe) {
  */
 function limiteAge(categorie) {
   switch (categorie) {
-    case "BABY":
+    case CATEGORIES.BABY:
       return 1;
 
-    case "Primaire":
+    case CATEGORIES.PRIMAIRE:
       return 2;
 
-    case "College":
+    case CATEGORIES.COLLEGE:
       return 3;
 
     default:
@@ -208,8 +216,15 @@ function limiteAge(categorie) {
  * ===========================================================
  * DEPLACEMENT SIMPLE
  * ===========================================================
+ *
+ * On ne recalcule le score que pour les deux créneaux concernés
+ * (source et destination), pas pour la répartition entière :
+ * ce sont les deux seuls groupes dont la composition change,
+ * donc les seuls dont le score peut varier.
  */
-function tenterDeplacement(creneaux) {
+function tenterDeplacement(creneaux, config) {
+  const poids = obtenirPoids(config);
+
   for (let source of creneaux) {
     for (let joueur of source.joueurs.filter((j) => !estVerrouille(j))) {
       for (let destination of creneaux) {
@@ -219,13 +234,17 @@ function tenterDeplacement(creneaux) {
 
         if (!echangePossible(joueur, destination)) continue;
 
-        const avant = scoreAffectationTotale(creneaux);
+        const avant =
+          scoreCreneauComplet(source, poids) +
+          scoreCreneauComplet(destination, poids);
 
         source.joueurs = source.joueurs.filter((j) => j !== joueur);
 
         destination.joueurs.push(joueur);
 
-        const apres = scoreAffectationTotale(creneaux);
+        const apres =
+          scoreCreneauComplet(source, poids) +
+          scoreCreneauComplet(destination, poids);
 
         if (apres > avant) {
           joueur.affectation = destination.nom;
@@ -252,10 +271,10 @@ function tenterDeplacement(creneaux) {
  * OPTIMISATION COMPLETE
  * ===========================================================
  */
-function optimisationComplete(creneaux) {
+function optimisationComplete(creneaux, config) {
   journalInfo("OPTIMISATION", "Début optimisation");
 
-  const scoreDebut = scoreAffectationTotale(creneaux);
+  const scoreDebut = scoreAffectationTotale(creneaux, config);
 
   journalInfo("SCORE", "Score début optimisation", scoreDebut);
 
@@ -278,14 +297,14 @@ function optimisationComplete(creneaux) {
       progression = true;
     }
 
-    if (tenterDeplacement(creneaux)) {
+    if (tenterDeplacement(creneaux, config)) {
       progression = true;
     }
 
     tours++;
   }
 
-  const scoreFin = scoreAffectationTotale(creneaux);
+  const scoreFin = scoreAffectationTotale(creneaux, config);
 
   journalInfo("SCORE", "Score fin optimisation", scoreFin);
 

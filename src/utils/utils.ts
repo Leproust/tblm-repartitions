@@ -325,3 +325,19 @@ function pourcentage(valeur, total) {
 
   return Math.round((valeur / total) * 100 * 10) / 10;
 }
+
+/**
+ * ===========================================================
+ * Détermine si un joueur appartient aux catégories jeunes
+ *
+ * Source unique de vérité : utilisée par les contraintes,
+ * le scoring (V1 et V2), l'optimisation, les priorités et
+ * les statistiques. La méthode Joueur.estJeune() délègue ici
+ * pour éviter toute divergence entre les deux.
+ * ===========================================================
+ */
+function estJeune(joueur) {
+  return [CATEGORIES.BABY, CATEGORIES.PRIMAIRE, CATEGORIES.COLLEGE].includes(
+    joueur.categorie,
+  );
+}

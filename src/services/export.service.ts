@@ -574,3 +574,33 @@ function genererSynthese(
   return resultat;
 
 }
+
+/**
+ * ===========================================================
+ * RAPPORT COMPLET
+ * ===========================================================
+ *
+ * Fonction appelée par "Générer rapport" et "Rejouer la
+ * répartition" mais qui n'existait pas encore (plantage
+ * garanti à l'exécution). Implémentation minimale :
+ * - une feuille "Rapport" avec la synthèse par créneau
+ * - une feuille par créneau pour la vue entraîneur
+ *
+ * `stats` n'est pas encore exploité ici : à enrichir si le
+ * rapport doit aussi reprendre le détail des statistiques.
+ */
+function exporterRapport(creneaux, stats) {
+  const feuille = obtenirOuCreerFeuille(SHEETS.RAPPORT);
+
+  viderFeuille(SHEETS.RAPPORT);
+
+  const lignes = genererSynthese(creneaux);
+
+  ecrireTableau(feuille, lignes);
+
+  feuille.autoResizeColumns(1, lignes[0].length);
+
+  exporterVueEntraineur(creneaux);
+
+  return feuille;
+}
