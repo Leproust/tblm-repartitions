@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "checkJs": true,
+    "target": "ES2020",
+    "module": "none",
+    "types": [
+      "google-apps-script"
+    ],
+    "baseUrl": "./src"
+  },
+  "include": [
+    "src/**/*.gs",
+    "src/**/*.js",
+    "src/**/*.ts" ]
+}

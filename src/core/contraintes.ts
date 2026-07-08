@@ -1,0 +1,192 @@
+/**
+ * ===========================================================
+ * contraintes.gs
+ *
+ * Toutes les contraintes métier de l'école de tennis.
+ *
+ * Une contrainte renvoie TRUE si le joueur peut être placé
+ * sur le créneau, FALSE sinon.
+ *
+ * Les contraintes sont BLOQUANTES.
+ *
+ * ===========================================================
+ */
+
+/**
+ * Fonction principale
+ */
+function affectationPossible(joueur, creneau) {
+  return (
+    creneauActif(creneau) &&
+    categorieCompatible(joueur, creneau) &&
+    voeuCompatible(joueur, creneau) &&
+    capaciteDisponible(creneau) &&
+    ageCompatible(joueur, creneau)
+  );
+}
+
+/**
+ * -----------------------------------------------------------
+ * Créneau actif
+ * -----------------------------------------------------------
+ */
+function creneauActif(creneau) {
+  return !creneau.actif || creneau.actif === true || creneau.actif === "Oui";
+}
+
+/**
+ * -----------------------------------------------------------
+ * Capacité
+ * -----------------------------------------------------------
+ */
+function capaciteCreneau(creneau) {
+  const effectif = Number(creneau && (creneau.effectif ?? creneau.capacite));
+
+  return Number.isFinite(effectif) ? effectif : 0;
+}
+
+function capaciteDisponible(creneau) {
+  const effectif = creneau.joueurs.length;
+
+  return effectif < capaciteCreneau(creneau) + Number(creneau.surbooking || 0);
+}
+
+/**
+ * -----------------------------------------------------------
+ * Catégorie
+ * -----------------------------------------------------------
+ */
+function categorieCompatible(joueur, creneau) {
+  /*
+      Catégorie identique
+  */
+
+  if (joueur.categorie === creneau.categorie) {
+    return true;
+  }
+
+  /*
+      Adultes
+      -> jamais de mélange
+  */
+
+  if (joueur.categorie === "Homme adulte" || joueur.categorie === "Femme") {
+    return false;
+  }
+
+  /*
+      BABY
+  */
+
+  if (joueur.categorie === "BABY") {
+    return creneau.categorie === "BABY";
+  }
+
+  /*
+      Primaire / College
+      peuvent éventuellement
+      se mélanger.
+  */
+
+  if (joueur.categorie === "Primaire") {
+    return creneau.categorie === "Primaire" || creneau.categorie === "College";
+  }
+
+  if (joueur.categorie === "College") {
+    return creneau.categorie === "College" || creneau.categorie === "Primaire";
+  }
+
+  return false;
+}
+
+/**
+ * -----------------------------------------------------------
+ * Compatibilité voeux
+ * -----------------------------------------------------------
+ */
+function voeuCompatible(joueur, creneau) {
+  /*
+      Adultes :
+      uniquement leurs voeux
+  */
+
+  if (joueur.categorie === "Homme adulte" || joueur.categorie === "Femme") {
+    return joueur.voeux.includes(creneau.nom);
+  }
+
+  /*
+      Jeunes :
+
+      on autorise les autres
+      créneaux de la catégorie.
+  */
+
+  return true;
+}
+
+/**
+ * -----------------------------------------------------------
+ * Compatibilité âge
+ * -----------------------------------------------------------
+ */
+function ageCompatible(joueur, creneau) {
+  if (!estJeune(joueur)) return true;
+
+  if (creneau.joueurs.length === 0) {
+    return true;
+  }
+
+  const ageMoyen = moyenne(creneau.joueurs, (j) => j.age);
+
+  const ecart = Math.abs(joueur.age - ageMoyen);
+
+  switch (joueur.categorie) {
+    case "BABY":
+      return ecart <= 1;
+
+    case "Primaire":
+      return ecart <= 2;
+
+    case "College":
+      return ecart <= 3;
+  }
+
+  return true;
+}
+
+/**
+ * -----------------------------------------------------------
+ * Retourne les créneaux autorisés
+ * -----------------------------------------------------------
+ */
+function creneauxPossibles(joueur, creneaux) {
+  return creneaux.filter((c) => affectationPossible(joueur, c));
+}
+
+/**
+ * -----------------------------------------------------------
+ * Vérifie si un groupe est complet
+ * -----------------------------------------------------------
+ */
+function groupeComplet(groupe) {
+  return groupe.joueurs.length >= capaciteCreneau(groupe);
+}
+
+/**
+ * -----------------------------------------------------------
+ * Vérifie si le groupe est
+ * en surbooking
+ * -----------------------------------------------------------
+ */
+function groupeEnSurbooking(groupe) {
+  return groupe.joueurs.length > capaciteCreneau(groupe);
+}
+
+/**
+ * -----------------------------------------------------------
+ * Nombre de places restantes
+ * -----------------------------------------------------------
+ */
+function placesDisponibles(groupe) {
+  return capaciteCreneau(groupe) + Number(groupe.surbooking || 0) - groupe.joueurs.length;
+}
