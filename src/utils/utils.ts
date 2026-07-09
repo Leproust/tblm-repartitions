@@ -328,6 +328,24 @@ function pourcentage(valeur, total) {
 
 /**
  * ===========================================================
+ * Clé de comparaison insensible à la casse (vœu <-> créneau)
+ *
+ * normaliserTexte() (lecteur.service.ts) trim et compacte déjà
+ * les espaces, mais ne touche pas la casse. Une saisie comme
+ * "Lundi 21h" ne matchait donc jamais un créneau "Lundi 21H".
+ * Cette fonction est dédiée à la comparaison, pas au stockage :
+ * on ne veut pas passer les noms/prénoms en minuscule à
+ * l'affichage, donc on ne modifie pas normaliserTexte().
+ * ===========================================================
+ */
+function cleComparaisonCreneau(valeur) {
+  if (valeur === null || valeur === undefined) return "";
+
+  return String(valeur).trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+/**
+ * ===========================================================
  * Détermine si un joueur appartient aux catégories jeunes
  *
  * Source unique de vérité : utilisée par les contraintes,

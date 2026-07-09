@@ -47,13 +47,26 @@ function lireJoueurs(ss) {
 
   const index = construireIndex(headers);
 
+  const indexNormalise = construireIndexEnTetesNormalise(headers);
+
+  const colonnesVoeuxTrouvees = VOEUX.filter(
+    (v) => index[v] !== undefined || indexNormalise[normaliserEnTete(v)] !== undefined,
+  );
+
+  if (colonnesVoeuxTrouvees.length === 0) {
+    Logger.log(
+      "ATTENTION : aucune colonne de voeu (\"Voeu 1\" à \"Voeu 5\") trouvée dans les en-têtes de Licencies. " +
+        "En-têtes lus : " + headers.join(" | "),
+    );
+  }
+
   const joueurs = [];
 
   data.forEach((ligne, numero) => {
     if (ligneVide(ligne)) return;
 
     try {
-      const joueur = parserJoueur(ligne, index);
+      const joueur = parserJoueur(ligne, index, indexNormalise);
 
       if (joueur) {
         joueurs.push(normaliserJoueur(joueur));
@@ -68,12 +81,42 @@ function lireJoueurs(ss) {
   return joueurs;
 }
 
+/**
+ * Normalise un en-tête pour un matching tolérant :
+ * casse, ligature œ/Œ, espaces superflus.
+ * Utilisé uniquement en secours quand la correspondance
+ * exacte ("Voeu 1", etc.) échoue, pour éviter qu'une variante
+ * d'en-tête ("Vœu 1", "VOEU 1"...) fasse perdre les vœux de
+ * tous les joueurs sans qu'aucune erreur ne remonte.
+ */
+function normaliserEnTete(texte) {
+  if (texte === null || texte === undefined) return "";
+
+  return String(texte)
+    .trim()
+    .toLowerCase()
+    .replace(/œ/g, "oe")
+    .replace(/\s+/g, " ");
+}
+
+function construireIndexEnTetesNormalise(headers) {
+  const index = {};
+
+  headers.forEach((h, i) => {
+    if (h !== undefined && h !== null) {
+      index[normaliserEnTete(h)] = i;
+    }
+  });
+
+  return index;
+}
+
 /* ===========================================================
  * PARSER JOUEUR
  * ===========================================================
  */
 
-function parserJoueur(ligne, index) {
+function parserJoueur(ligne, index, indexNormalise) {
   const joueur = {
     nouveau: lireBoolean(ligne[index["Nouveau Adherent"]]),
 
@@ -101,7 +144,7 @@ function parserJoueur(ligne, index) {
 
     competition: lireBoolean(ligne[index["Competition"]]),
 
-    voeux: lireVoeux(ligne, index),
+    voeux: lireVoeux(ligne, index, indexNormalise),
 
     affectation: null,
 
@@ -120,11 +163,21 @@ function parserJoueur(ligne, index) {
  * ===========================================================
  */
 
-function lireVoeux(ligne, index) {
+function lireVoeux(ligne, index, indexNormalise) {
   const liste = [];
 
   VOEUX.forEach((v) => {
-    const valeur = lireTexte(ligne[index[v]]);
+    let position = index[v];
+
+    if (position === undefined && indexNormalise) {
+      position = indexNormalise[normaliserEnTete(v)];
+    }
+
+    if (position === undefined) {
+      return;
+    }
+
+    const valeur = lireTexte(ligne[position]);
 
     if (valeur != "") liste.push(valeur);
   });

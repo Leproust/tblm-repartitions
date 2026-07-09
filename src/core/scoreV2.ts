@@ -129,7 +129,9 @@ function scoreVoeuV2(joueur, creneau) {
     return 0;
   }
 
-  const index = joueur.voeux.indexOf(creneau.nom);
+  const nomCreneau = cleComparaisonCreneau(creneau.nom);
+
+  const index = joueur.voeux.findIndex((v) => cleComparaisonCreneau(v) === nomCreneau);
 
   switch (index) {
     case 0:

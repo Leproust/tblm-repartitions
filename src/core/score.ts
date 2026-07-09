@@ -212,10 +212,15 @@ function scoreVoeu(
   creneau
 ){
 
+  const nomCreneau =
+    cleComparaisonCreneau(
+      creneau.nom
+    );
+
   const position =
     joueur.voeux
-    .indexOf(
-      creneau.nom
+    .findIndex(
+      (v) => cleComparaisonCreneau(v) === nomCreneau
     );
 
 

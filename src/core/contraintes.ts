@@ -106,29 +106,25 @@ function categorieCompatible(joueur, creneau) {
 /**
  * -----------------------------------------------------------
  * Compatibilité voeux
+ *
+ * Si des voeux sont renseignés (adultes comme jeunes),
+ * on les respecte strictement : le joueur ne peut être placé
+ * que sur un créneau qu'il a demandé. S'il n'a aucune solution
+ * dans ses voeux, il part en "Sans solution" pour un
+ * traitement manuel plutôt que d'être casé ailleurs.
+ *
+ * Sans voeu renseigné, on laisse la place à tout créneau
+ * compatible avec sa catégorie.
  * -----------------------------------------------------------
  */
 function voeuCompatible(joueur, creneau) {
-  /*
-      Adultes :
-      si des voeux sont renseignés, on les respecte.
-      sinon on laisse la place à tout créneau valide.
-  */
-
-  if (joueur.categorie === CATEGORIES.HOMME_ADULTE || joueur.categorie === CATEGORIES.FEMME) {
-    if (!joueur.voeux || joueur.voeux.length === 0) {
-      return true;
-    }
-
-    return joueur.voeux.includes(creneau.nom);
+  if (!joueur.voeux || joueur.voeux.length === 0) {
+    return true;
   }
 
-  /*
-      Jeunes :
-      on autorise les autres créneaux de la catégorie.
-  */
+  const nomCreneau = cleComparaisonCreneau(creneau.nom);
 
-  return true;
+  return joueur.voeux.some((v) => cleComparaisonCreneau(v) === nomCreneau);
 }
 
 /**

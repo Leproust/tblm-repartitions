@@ -35,11 +35,11 @@ var SHEETS = {
 };
 
 var VOEUX = [
-  "Voeu 1",
-  "Voeu 2",
-  "Voeu 3",
-  "Voeu 4",
-  "Voeu 5",
+  "1er Voeu",
+  "2eme Voeu",
+  "3eme Voeu",
+  "4eme Voeu",
+  "5eme Voeu",
 ];
 
 const CATEGORIES = {

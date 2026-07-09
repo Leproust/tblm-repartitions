@@ -170,6 +170,14 @@ function scoreGroupeAvecContexte(groupe) {
  */
 function echangePossible(joueur, groupe) {
   /*
+    Vérifie le respect des voeux (mêmes règles
+    que l'affectation initiale : un joueur avec des voeux
+    ne doit jamais être déplacé hors de ses voeux)
+  */
+
+  if (!voeuCompatible(joueur, groupe)) return false;
+
+  /*
     Vérifie la catégorie
   */
 
