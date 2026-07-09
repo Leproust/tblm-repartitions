@@ -271,6 +271,43 @@ function exporterStatistiques(stats) {
     lignes.push([cle, stats.voeux[cle]]);
   });
 
+  lignes.push(["", ""]);
+
+  lignes.push(["Problèmes détectés"]);
+
+  const problemes = stats.problemes || [];
+
+  if (problemes.length === 0) {
+    lignes.push(["Aucun problème détecté", ""]);
+  } else {
+    lignes.push(["Type", "Détail"]);
+
+    problemes.forEach((p) => {
+      let detail = "";
+
+      switch (p.type) {
+        case "NON_AFFECTE":
+          detail = p.joueur + " n'a pas de créneau";
+          break;
+
+        case "SURBOOKING":
+          detail =
+            p.creneau + " : +" + p.valeur + " par rapport à la capacité";
+          break;
+
+        case "AGE":
+          detail =
+            p.creneau + " : écart d'âge de " + p.dispersion + " (groupe jeune)";
+          break;
+
+        default:
+          detail = JSON.stringify(p);
+      }
+
+      lignes.push([p.type, detail]);
+    });
+  }
+
   ecrireTableau(feuille, lignes);
 
   feuille.autoResizeColumns(1, 2);
