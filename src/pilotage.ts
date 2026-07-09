@@ -107,17 +107,76 @@ function exporterOccupation() {
 
 /**
  * ===========================================================
+ * JOUEURS AFFECTES (lecture de l'onglet Groupes)
+ *
+ * "Voir joueurs sans créneau" est un point d'entrée autonome,
+ * indépendant d'un calcul de répartition qui viendrait de
+ * tourner : il n'y a donc rien en mémoire pour savoir qui a
+ * été affecté. La seule source fiable est ce qui a été
+ * réellement écrit dans l'onglet "Groupes" par le dernier export.
+ *
+ * On identifie un joueur affecté par sa licence (fiable), avec
+ * un repli sur Nom+Prénom si la licence n'a pas pu être lue.
+ * ===========================================================
+ */
+function joueursAffectesDepuisGroupes() {
+  const feuille = SpreadsheetApp.getActive().getSheetByName(SHEETS.GROUPES);
+
+  const licences = new Set();
+  const nomsPrenoms = new Set();
+
+  if (!feuille) {
+    return { licences, nomsPrenoms };
+  }
+
+  const data = feuille.getDataRange().getValues();
+
+  if (data.length < 2) {
+    return { licences, nomsPrenoms };
+  }
+
+  const headers = data.shift();
+
+  const index = construireIndex(headers);
+
+  data.forEach((ligne) => {
+    const nom = lireTexte(ligne[index["Nom"]]);
+
+    if (!nom || nom === "Aucun joueur") return;
+
+    const licence = lireTexte(ligne[index["Licence"]]);
+
+    if (licence) {
+      licences.add(licence);
+    }
+
+    const prenom = lireTexte(ligne[index["Prénom"]]);
+
+    nomsPrenoms.add(cleComparaisonTexte(nom) + "|" + cleComparaisonTexte(prenom));
+  });
+
+  return { licences, nomsPrenoms };
+}
+
+/**
+ * ===========================================================
  * JOUEURS SANS CRENEAU
  *
  * ===========================================================
  */
-function trouverJoueursSansCreneau(joueurs) {
+function trouverJoueursSansCreneau(joueurs, affectes) {
   if (!joueurs) {
     return [];
   }
 
   return joueurs.filter((j) => {
-    return !j.creneau && !j.affectation;
+    if (j.licence && affectes.licences.has(j.licence)) {
+      return false;
+    }
+
+    const cle = cleComparaisonTexte(j.nom) + "|" + cleComparaisonTexte(j.prenom);
+
+    return !affectes.nomsPrenoms.has(cle);
   });
 }
 
@@ -130,7 +189,9 @@ function trouverJoueursSansCreneau(joueurs) {
 function exporterJoueursSansCreneau() {
   const contexte = chargerContexte();
 
-  const joueurs = trouverJoueursSansCreneau(contexte.joueurs);
+  const affectes = joueursAffectesDepuisGroupes();
+
+  const joueurs = trouverJoueursSansCreneau(contexte.joueurs, affectes);
 
   const donnees = [
     ["Nom", "Prénom", "Catégorie", "Classement", "Voeu 1", "Voeu 2", "Voeu 3"],

@@ -127,7 +127,7 @@ function lancerExport() {
   const totalJoueurs = creneaux.reduce((total, c) => total + (c.joueurs?.length || 0), 0);
 
   if (totalJoueurs === 0) {
-    creneaux = affecterJoueurs(joueurs, contexte.creneaux, contexte.config);
+    creneaux = affecterJoueursV2(joueurs, contexte.creneaux, contexte.config).creneaux;
   }
 
   exporterGroupes(creneaux);
@@ -148,7 +148,7 @@ function lancerStatistiques() {
   const totalJoueurs = creneaux.reduce((total, c) => total + (c.joueurs?.length || 0), 0);
 
   if (totalJoueurs === 0) {
-    creneaux = affecterJoueurs(joueurs, contexte.creneaux, contexte.config);
+    creneaux = affecterJoueursV2(joueurs, contexte.creneaux, contexte.config).creneaux;
   }
 
   const stats = genererStatistiques(joueurs, creneaux);
@@ -225,7 +225,7 @@ function lancerRapports() {
   const totalJoueurs = creneaux.reduce((total, c) => total + (c.joueurs?.length || 0), 0);
 
   if (totalJoueurs === 0) {
-    creneaux = affecterJoueurs(joueurs, contexte.creneaux, contexte.config);
+    creneaux = affecterJoueursV2(joueurs, contexte.creneaux, contexte.config).creneaux;
   }
 
   const stats = genererStatistiques(joueurs, creneaux);
@@ -389,7 +389,7 @@ function testMoteur() {
 
   Logger.log("Joueurs : " + joueurs.length);
 
-  const creneaux = affecterJoueurs(joueurs, contexte.creneaux, contexte.config);
+  const creneaux = affecterJoueursV2(joueurs, contexte.creneaux, contexte.config).creneaux;
 
   Logger.log("Créneaux : " + creneaux.length);
 

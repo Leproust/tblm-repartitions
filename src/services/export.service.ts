@@ -82,6 +82,8 @@ function construireTableauExport(
 
     "Prénom",
 
+    "Licence",
+
     "Age",
 
     "Classement",
@@ -134,6 +136,8 @@ function construireTableauExport(
 
           "",
 
+          "",
+
           ""
 
         ]);
@@ -159,6 +163,8 @@ function construireTableauExport(
             joueur.nom,
 
             joueur.prenom,
+
+            joueur.licence,
 
             joueur.age,
 
@@ -217,6 +223,10 @@ function construireTableauExport(
 
         "",
 
+        "",
+
+        "",
+
         ""
 
       ]);
@@ -249,7 +259,7 @@ function mettreEnFormeExport(
 
 
 
-  const nombreColonnes=10;
+  const nombreColonnes = feuille.getLastColumn() || 10;
 
 
 

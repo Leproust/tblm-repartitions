@@ -115,10 +115,10 @@ function statistiquesVoeux(joueurs) {
       return;
     }
 
-    const nomAffectation = cleComparaisonCreneau(joueur.affectation);
+    const nomAffectation = cleComparaisonTexte(joueur.affectation);
 
     const position = (joueur.voeux || []).findIndex(
-      (v) => cleComparaisonCreneau(v) === nomAffectation,
+      (v) => cleComparaisonTexte(v) === nomAffectation,
     );
 
     switch (position) {

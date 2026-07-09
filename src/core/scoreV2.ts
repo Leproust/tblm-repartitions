@@ -77,6 +77,20 @@ function calculerScoreV2(joueur, creneau, config) {
     return -999999;
   }
 
+  return calculerScoreV2Brut(joueur, creneau, config);
+}
+
+/**
+ * Calcul brut, sans le garde-fou des contraintes.
+ *
+ * Utilisé pour évaluer un joueur déjà en place dans son
+ * créneau (ex: recalcul du score total pendant l'optimisation).
+ * Dans ce cas, capaciteDisponible() renverrait toujours false
+ * pour un groupe déjà plein puisqu'il compte le joueur
+ * lui-même : on ne veut donc pas appliquer le garde-fou ici,
+ * seulement quand on évalue un NOUVEAU placement candidat.
+ */
+function calculerScoreV2Brut(joueur, creneau, config) {
   const poids = lirePoidsConfig(config);
 
   let score = 0;
@@ -121,6 +135,35 @@ function calculerScoreV2(joueur, creneau, config) {
 
 /**
  * ===========================================================
+ * SCORE D'UN CRENEAU / DE LA REPARTITION COMPLETE
+ *
+ * Utilisé par l'optimisation pour comparer un état avant/après
+ * (échange, déplacement) avec la même logique de score que
+ * l'affectation initiale (un seul moteur, cf. calculerScoreV2Brut).
+ * ===========================================================
+ */
+function scoreCreneauCompletV2(creneau, config) {
+  let score = 0;
+
+  creneau.joueurs.forEach((joueur) => {
+    score += calculerScoreV2Brut(joueur, creneau, config);
+  });
+
+  return score;
+}
+
+function scoreAffectationTotaleV2(creneaux, config) {
+  let score = 0;
+
+  creneaux.forEach((c) => {
+    score += scoreCreneauCompletV2(c, config);
+  });
+
+  return score;
+}
+
+/**
+ * ===========================================================
  * SCORE DES VOEUX
  * ===========================================================
  */
@@ -129,9 +172,9 @@ function scoreVoeuV2(joueur, creneau) {
     return 0;
   }
 
-  const nomCreneau = cleComparaisonCreneau(creneau.nom);
+  const nomCreneau = cleComparaisonTexte(creneau.nom);
 
-  const index = joueur.voeux.findIndex((v) => cleComparaisonCreneau(v) === nomCreneau);
+  const index = joueur.voeux.findIndex((v) => cleComparaisonTexte(v) === nomCreneau);
 
   switch (index) {
     case 0:

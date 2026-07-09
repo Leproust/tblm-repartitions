@@ -37,15 +37,15 @@ function optimiserRepartition(creneaux, parametres) {
   const iterations = parametres.iterations || OPTIMISATION.iterations;
   const config = parametres.config;
 
-  let scoreActuel = scoreAffectationTotale(creneaux, config);
+  let scoreActuel = scoreAffectationTotaleV2(creneaux, config);
 
   Logger.log("Score initial : " + scoreActuel);
 
   for (let i = 0; i < iterations; i++) {
-    const amelioration = tenterAmelioration(creneaux);
+    const amelioration = tenterAmelioration(creneaux, config);
 
     if (amelioration) {
-      scoreActuel = scoreAffectationTotale(creneaux, config);
+      scoreActuel = scoreAffectationTotaleV2(creneaux, config);
     }
   }
 
@@ -59,7 +59,7 @@ function optimiserRepartition(creneaux, parametres) {
  * UNE ITERATION
  * ===========================================================
  */
-function tenterAmelioration(creneaux) {
+function tenterAmelioration(creneaux, config) {
   /*
     Choisir deux créneaux
   */
@@ -67,7 +67,7 @@ function tenterAmelioration(creneaux) {
   const couples = genererCouplesCreneaux(creneaux);
 
   for (let couple of couples) {
-    const resultat = testerEchange(couple[0], couple[1]);
+    const resultat = testerEchange(couple[0], couple[1], config);
 
     if (resultat) return true;
   }
@@ -101,12 +101,12 @@ function genererCouplesCreneaux(creneaux) {
  * TEST ECHANGE ENTRE DEUX GROUPES
  * ===========================================================
  */
-function testerEchange(groupeA, groupeB) {
+function testerEchange(groupeA, groupeB, config) {
   const joueursA = groupeA.joueurs.filter((j) => !estVerrouille(j));
 
   const joueursB = groupeB.joueurs.filter((j) => !estVerrouille(j));
   const avant =
-    scoreGroupeAvecContexte(groupeA) + scoreGroupeAvecContexte(groupeB);
+    scoreCreneauCompletV2(groupeA, config) + scoreCreneauCompletV2(groupeB, config);
 
   for (let i = 0; i < joueursA.length; i++) {
     const joueurA = joueursA[i];
@@ -130,8 +130,8 @@ function testerEchange(groupeA, groupeB) {
       groupeB.joueurs[j] = joueurA;
 
       const apres =
-        calculerScoreGroupe(groupeA.joueurs) +
-        calculerScoreGroupe(groupeB.joueurs);
+        scoreCreneauCompletV2(groupeA, config) +
+        scoreCreneauCompletV2(groupeB, config);
 
       /*
         On garde seulement
@@ -157,10 +157,6 @@ function testerEchange(groupeA, groupeB) {
   }
 
   return false;
-}
-
-function scoreGroupeAvecContexte(groupe) {
-  return calculerScoreGroupe(groupe.joueurs);
 }
 
 /**
@@ -231,8 +227,6 @@ function limiteAge(categorie) {
  * donc les seuls dont le score peut varier.
  */
 function tenterDeplacement(creneaux, config) {
-  const poids = obtenirPoids(config);
-
   for (let source of creneaux) {
     for (let joueur of source.joueurs.filter((j) => !estVerrouille(j))) {
       for (let destination of creneaux) {
@@ -243,16 +237,16 @@ function tenterDeplacement(creneaux, config) {
         if (!echangePossible(joueur, destination)) continue;
 
         const avant =
-          scoreCreneauComplet(source, poids) +
-          scoreCreneauComplet(destination, poids);
+          scoreCreneauCompletV2(source, config) +
+          scoreCreneauCompletV2(destination, config);
 
         source.joueurs = source.joueurs.filter((j) => j !== joueur);
 
         destination.joueurs.push(joueur);
 
         const apres =
-          scoreCreneauComplet(source, poids) +
-          scoreCreneauComplet(destination, poids);
+          scoreCreneauCompletV2(source, config) +
+          scoreCreneauCompletV2(destination, config);
 
         if (apres > avant) {
           joueur.affectation = destination.nom;
@@ -282,7 +276,7 @@ function tenterDeplacement(creneaux, config) {
 function optimisationComplete(creneaux, config) {
   journalInfo("OPTIMISATION", "Début optimisation");
 
-  const scoreDebut = scoreAffectationTotale(creneaux, config);
+  const scoreDebut = scoreAffectationTotaleV2(creneaux, config);
 
   journalInfo("SCORE", "Score début optimisation", scoreDebut);
 
@@ -301,7 +295,7 @@ function optimisationComplete(creneaux, config) {
   while (progression && tours < 100) {
     progression = false;
 
-    if (tenterAmelioration(creneaux)) {
+    if (tenterAmelioration(creneaux, config)) {
       progression = true;
     }
 
@@ -312,7 +306,7 @@ function optimisationComplete(creneaux, config) {
     tours++;
   }
 
-  const scoreFin = scoreAffectationTotale(creneaux, config);
+  const scoreFin = scoreAffectationTotaleV2(creneaux, config);
 
   journalInfo("SCORE", "Score fin optimisation", scoreFin);
 

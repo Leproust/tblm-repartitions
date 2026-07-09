@@ -122,9 +122,9 @@ function voeuCompatible(joueur, creneau) {
     return true;
   }
 
-  const nomCreneau = cleComparaisonCreneau(creneau.nom);
+  const nomCreneau = cleComparaisonTexte(creneau.nom);
 
-  return joueur.voeux.some((v) => cleComparaisonCreneau(v) === nomCreneau);
+  return joueur.voeux.some((v) => cleComparaisonTexte(v) === nomCreneau);
 }
 
 /**
