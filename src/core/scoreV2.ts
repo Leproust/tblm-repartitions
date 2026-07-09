@@ -67,13 +67,13 @@ function lirePoidsConfig(config) {
  * SCORE GLOBAL JOUEUR -> CRENEAU
  * ===========================================================
  */
-function calculerScoreV2(joueur, creneau, config) {
+function calculerScoreV2(joueur, creneau, config, options: { ignorerCompetition?: boolean } = {}) {
   /*
     Sécurité :
     un créneau interdit ne doit jamais passer
   */
 
-  if (!affectationPossible(joueur, creneau)) {
+  if (!affectationPossible(joueur, creneau, options)) {
     return -999999;
   }
 

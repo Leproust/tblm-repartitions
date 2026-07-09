@@ -14,13 +14,20 @@
 
 /**
  * Fonction principale
+ *
+ * `options.ignorerCompetition` permet un second passage en
+ * mode repli : n'est utilisé que si, en respectant strictement
+ * la compétition, un joueur n'a AUCUNE place possible (cf.
+ * affecterUnJoueurV2). Homme/Femme adulte, lui, reste une
+ * contrainte dure de bout en bout : ce mélange n'est jamais
+ * automatique, seulement manuel si le club le décide.
  */
-function affectationPossible(joueur, creneau) {
+function affectationPossible(joueur, creneau, options: { ignorerCompetition?: boolean } = {}) {
   return (
     creneauActif(creneau) &&
     categorieCompatible(joueur, creneau) &&
     voeuCompatible(joueur, creneau) &&
-    competitionCompatible(joueur, creneau) &&
+    (options.ignorerCompetition || competitionCompatible(joueur, creneau)) &&
     capaciteDisponible(creneau) &&
     ageCompatible(joueur, creneau)
   );
@@ -179,8 +186,8 @@ function ageCompatible(joueur, creneau) {
  * Retourne les créneaux autorisés
  * -----------------------------------------------------------
  */
-function creneauxPossibles(joueur, creneaux) {
-  return creneaux.filter((c) => affectationPossible(joueur, c));
+function creneauxPossibles(joueur, creneaux, options: { ignorerCompetition?: boolean } = {}) {
+  return creneaux.filter((c) => affectationPossible(joueur, c, options));
 }
 
 /**

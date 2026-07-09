@@ -121,9 +121,32 @@ function initialiserGroupesV2(creneaux) {
 function affecterUnJoueurV2(joueur, creneaux, config) {
   /*
     Recherche des créneaux autorisés
+    (passage strict : compétition respectée)
   */
 
-  const possibles = creneauxPossibles(joueur, creneaux);
+  let possibles = creneauxPossibles(joueur, creneaux);
+
+  let enRepli = false;
+
+  /*
+    Repli : si AUCUNE place n'existe en respectant
+    strictement la compétition, on retente en l'ignorant
+    (mélange compétition/non-compétition en dernier recours).
+    Homme/Femme adulte, lui, n'a jamais de repli : ce
+    mélange reste toujours manuel.
+  */
+
+  if (possibles.length === 0) {
+    const repli = creneauxPossibles(joueur, creneaux, {
+      ignorerCompetition: true,
+    });
+
+    if (repli.length > 0) {
+      possibles = repli;
+
+      enRepli = true;
+    }
+  }
 
   if (possibles.length === 0) {
     journalInfo(
@@ -139,11 +162,13 @@ function affecterUnJoueurV2(joueur, creneaux, config) {
     Classement des candidats
   */
 
+  const options = enRepli ? { ignorerCompetition: true } : undefined;
+
   const candidats = possibles.map((c) => {
     return {
       creneau: c,
 
-      score: calculerScoreV2(joueur, c, config),
+      score: calculerScoreV2(joueur, c, config, options),
     };
   });
 
@@ -162,6 +187,14 @@ function affecterUnJoueurV2(joueur, creneaux, config) {
   meilleur.creneau.joueurs.push(joueur);
 
   joueur.affectation = meilleur.creneau.nom;
+
+  if (enRepli) {
+    journalInfo(
+      "AFFECTATION",
+      "Repli compétition (aucune place compatible)",
+      joueur.nom + " " + joueur.prenom + " -> " + meilleur.creneau.nom,
+    );
+  }
 
   journalInfo(
     "AFFECTATION",

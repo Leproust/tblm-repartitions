@@ -63,7 +63,11 @@ function analyserOccupationCreneaux(creneaux) {
 function exporterOccupation() {
   const contexte = chargerContexte();
 
-  const occupation = analyserOccupationCreneaux(contexte.creneaux);
+  const joueurs = enrichirJoueurs(contexte.joueurs);
+
+  const creneaux = chargerGroupesDepuisFeuille(joueurs, contexte.creneaux);
+
+  const occupation = analyserOccupationCreneaux(creneaux);
 
   const donnees = [
     [

@@ -174,12 +174,27 @@ function echangePossible(joueur, groupe) {
   if (!voeuCompatible(joueur, groupe)) return false;
 
   /*
-    Vérifie la catégorie
+    Vérifie la catégorie (même règle que l'affectation
+    initiale : les adultes ne se mélangent jamais entre
+    Homme adulte et Femme. Avant ce correctif, cette
+    contrainte n'était appliquée qu'aux jeunes ici, ce qui
+    permettait à un adulte d'être déplacé vers un créneau
+    de la mauvaise catégorie pendant l'optimisation)
   */
 
-  if (groupe.categorie && joueur.categorie !== groupe.categorie) {
-    if (estJeune(joueur)) return false;
-  }
+  if (!categorieCompatible(joueur, groupe)) return false;
+
+  /*
+    Vérifie la compétition : l'optimisation (échanges,
+    déplacements) ne doit jamais CREER un nouveau mélange
+    compétition/non-compétition. Un joueur déjà placé en
+    repli (mélangé) pourra quand même être amélioré vers un
+    créneau compatible s'il en apparaît un pendant
+    l'optimisation, puisque cette vérification porte sur la
+    DESTINATION, pas sur l'état actuel du joueur.
+  */
+
+  if (!competitionCompatible(joueur, groupe)) return false;
 
   /*
     Contrôle âge jeunes

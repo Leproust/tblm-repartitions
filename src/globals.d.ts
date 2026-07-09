@@ -14,6 +14,7 @@ declare function analyserAffectation(creneaux: any[]): any;
 declare function chargerContexte(): any;
 declare function controlerJoueurs(joueurs: any[]): any[];
 declare function enrichirJoueurs(joueurs: any[]): any[];
+declare function chargerGroupesDepuisFeuille(joueurs: any[], creneaux: any[], options?: { onlyFixed?: boolean }): any[];
 declare function genererStatistiques(joueurs: any[], creneaux: any[]): any;
 declare function exporterStatistiques(stats: any): void;
 declare function exporterRapport(creneaux: any[], stats: any): void;
