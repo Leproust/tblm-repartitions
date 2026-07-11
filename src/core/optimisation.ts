@@ -31,7 +31,7 @@
  * personnalisés par le club soient respectés pendant l'optimisation,
  * pas seulement pendant l'affectation initiale.
  */
-function optimiserRepartition(creneaux, parametres) {
+function optimiserRepartition(creneaux: CreneauData[], parametres) {
   parametres = parametres || {};
 
   const iterations = parametres.iterations || OPTIMISATION.iterations;
@@ -59,7 +59,7 @@ function optimiserRepartition(creneaux, parametres) {
  * UNE ITERATION
  * ===========================================================
  */
-function tenterAmelioration(creneaux, config) {
+function tenterAmelioration(creneaux: CreneauData[], config) {
   /*
     Choisir deux créneaux
   */
@@ -80,7 +80,7 @@ function tenterAmelioration(creneaux, config) {
  * GENERATION DES COUPLES
  * ===========================================================
  */
-function genererCouplesCreneaux(creneaux) {
+function genererCouplesCreneaux(creneaux: CreneauData[]) {
   const couples = [];
 
   for (let i = 0; i < creneaux.length; i++) {
@@ -101,7 +101,7 @@ function genererCouplesCreneaux(creneaux) {
  * TEST ECHANGE ENTRE DEUX GROUPES
  * ===========================================================
  */
-function testerEchange(groupeA, groupeB, config) {
+function testerEchange(groupeA: CreneauData, groupeB: CreneauData, config) {
   const joueursA = groupeA.joueurs.filter((j) => !estVerrouille(j));
 
   const joueursB = groupeB.joueurs.filter((j) => !estVerrouille(j));
@@ -164,7 +164,7 @@ function testerEchange(groupeA, groupeB, config) {
  * VALIDATION ECHANGE
  * ===========================================================
  */
-function echangePossible(joueur, groupe) {
+function echangePossible(joueur: JoueurData, groupe: CreneauData) {
   /*
     Vérifie le respect des voeux (mêmes règles
     que l'affectation initiale : un joueur avec des voeux
@@ -241,7 +241,7 @@ function limiteAge(categorie) {
  * ce sont les deux seuls groupes dont la composition change,
  * donc les seuls dont le score peut varier.
  */
-function tenterDeplacement(creneaux, config) {
+function tenterDeplacement(creneaux: CreneauData[], config) {
   for (let source of creneaux) {
     for (let joueur of source.joueurs.filter((j) => !estVerrouille(j))) {
       for (let destination of creneaux) {
@@ -288,7 +288,7 @@ function tenterDeplacement(creneaux, config) {
  * OPTIMISATION COMPLETE
  * ===========================================================
  */
-function optimisationComplete(creneaux, config) {
+function optimisationComplete(creneaux: CreneauData[], config) {
   journalInfo("OPTIMISATION", "Début optimisation");
 
   const scoreDebut = scoreAffectationTotaleV2(creneaux, config);

@@ -249,6 +249,37 @@ function diagnosticDonnees() {
 
 /**
  * ===========================================================
+ * DIAGNOSTIC DE COHERENCE DES DONNEES
+ *
+ * A lancer AVANT un calcul de répartition (menu placé en haut
+ * exprès) : repère les problèmes de saisie qui produisent des
+ * résultats silencieusement faux plutôt que de les découvrir
+ * après coup.
+ * ===========================================================
+ */
+function lancerDiagnosticCoherence() {
+  const contexte = chargerContexte();
+
+  const joueurs = enrichirJoueurs(contexte.joueurs);
+
+  const problemes = diagnostiquerCoherenceDonnees(
+    joueurs,
+    contexte.creneaux,
+    contexte.config,
+  );
+
+  exporterDiagnostic(problemes);
+
+  const message =
+    problemes.length === 0
+      ? "Aucun problème détecté."
+      : problemes.length + " problème(s) détecté(s), voir l'onglet Diagnostic.";
+
+  SpreadsheetApp.getActive().toast(message);
+}
+
+/**
+ * ===========================================================
  * ERREURS
  * ===========================================================
  */

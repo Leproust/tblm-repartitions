@@ -22,7 +22,7 @@
  * contrainte dure de bout en bout : ce mélange n'est jamais
  * automatique, seulement manuel si le club le décide.
  */
-function affectationPossible(joueur, creneau, options: { ignorerCompetition?: boolean } = {}) {
+function affectationPossible(joueur: JoueurData, creneau: CreneauData, options: { ignorerCompetition?: boolean } = {}) {
   return (
     creneauActif(creneau) &&
     categorieCompatible(joueur, creneau) &&
@@ -41,7 +41,7 @@ function affectationPossible(joueur, creneau, options: { ignorerCompetition?: bo
  * Il ne devient inactif que si `actif` vaut explicitement false.
  * -----------------------------------------------------------
  */
-function creneauActif(creneau) {
+function creneauActif(creneau: CreneauData) {
   return creneau.actif !== false;
 }
 
@@ -50,13 +50,13 @@ function creneauActif(creneau) {
  * Capacité
  * -----------------------------------------------------------
  */
-function capaciteCreneau(creneau) {
+function capaciteCreneau(creneau: CreneauData) {
   const effectif = Number(creneau && (creneau.effectif ?? creneau.capacite));
 
   return Number.isFinite(effectif) ? effectif : 0;
 }
 
-function capaciteDisponible(creneau) {
+function capaciteDisponible(creneau: CreneauData) {
   const effectif = creneau.joueurs.length;
 
   return effectif < capaciteCreneau(creneau) + Number(creneau.surbooking || 0);
@@ -67,7 +67,7 @@ function capaciteDisponible(creneau) {
  * Catégorie
  * -----------------------------------------------------------
  */
-function categorieCompatible(joueur, creneau) {
+function categorieCompatible(joueur: JoueurData, creneau: CreneauData) {
   /*
       Catégorie identique
   */
@@ -124,7 +124,7 @@ function categorieCompatible(joueur, creneau) {
  * compatible avec sa catégorie.
  * -----------------------------------------------------------
  */
-function voeuCompatible(joueur, creneau) {
+function voeuCompatible(joueur: JoueurData, creneau: CreneauData) {
   if (!joueur.voeux || joueur.voeux.length === 0) {
     return true;
   }
@@ -139,7 +139,7 @@ function voeuCompatible(joueur, creneau) {
  * Compatibilité compétition adultes
  * -----------------------------------------------------------
  */
-function competitionCompatible(joueur, creneau) {
+function competitionCompatible(joueur: JoueurData, creneau: CreneauData) {
   if (estJeune(joueur)) {
     return true;
   }
@@ -156,7 +156,7 @@ function competitionCompatible(joueur, creneau) {
  * Compatibilité âge
  * -----------------------------------------------------------
  */
-function ageCompatible(joueur, creneau) {
+function ageCompatible(joueur: JoueurData, creneau: CreneauData) {
   if (!estJeune(joueur)) return true;
 
   if (creneau.joueurs.length === 0) {
@@ -186,7 +186,7 @@ function ageCompatible(joueur, creneau) {
  * Retourne les créneaux autorisés
  * -----------------------------------------------------------
  */
-function creneauxPossibles(joueur, creneaux, options: { ignorerCompetition?: boolean } = {}) {
+function creneauxPossibles(joueur: JoueurData, creneaux: CreneauData[], options: { ignorerCompetition?: boolean } = {}) {
   return creneaux.filter((c) => affectationPossible(joueur, c, options));
 }
 
@@ -195,7 +195,7 @@ function creneauxPossibles(joueur, creneaux, options: { ignorerCompetition?: boo
  * Vérifie si un groupe est complet
  * -----------------------------------------------------------
  */
-function groupeComplet(groupe) {
+function groupeComplet(groupe: CreneauData) {
   return groupe.joueurs.length >= capaciteCreneau(groupe);
 }
 
@@ -205,7 +205,7 @@ function groupeComplet(groupe) {
  * en surbooking
  * -----------------------------------------------------------
  */
-function groupeEnSurbooking(groupe) {
+function groupeEnSurbooking(groupe: CreneauData) {
   return groupe.joueurs.length > capaciteCreneau(groupe);
 }
 
@@ -214,6 +214,6 @@ function groupeEnSurbooking(groupe) {
  * Nombre de places restantes
  * -----------------------------------------------------------
  */
-function placesDisponibles(groupe) {
+function placesDisponibles(groupe: CreneauData) {
   return capaciteCreneau(groupe) + Number(groupe.surbooking || 0) - groupe.joueurs.length;
 }

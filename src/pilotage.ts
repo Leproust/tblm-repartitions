@@ -283,3 +283,153 @@ function joueursRecalculables(joueurs) {
 function groupeEstValide(groupe) {
   return groupe && groupe.valide === true;
 }
+
+/**
+ * ===========================================================
+ * DIAGNOSTIC DE COHERENCE DES DONNEES
+ *
+ * A lancer AVANT un calcul de répartition, pour repérer les
+ * problèmes de saisie qui provoquent des résultats silencieusement
+ * faux (comme les vœux mal lus ou le mélange Homme/Femme qu'on a
+ * dû corriger) plutôt que de les découvrir après coup.
+ *
+ * ===========================================================
+ */
+function diagnostiquerCoherenceDonnees(joueurs, creneaux, config) {
+  const problemes = [];
+
+  /*
+    1) Noms de créneaux dupliqués
+
+    Le nom du créneau est utilisé comme identifiant partout
+    (vœux, verrouillage, export...). Deux créneaux qui partagent
+    le même nom se font invisiblement concurrence.
+  */
+
+  const comptageNoms = {};
+
+  (creneaux || []).forEach((c) => {
+    const cle = cleComparaisonTexte(c.nom);
+
+    if (!cle) return;
+
+    comptageNoms[cle] = (comptageNoms[cle] || 0) + 1;
+  });
+
+  Object.keys(comptageNoms).forEach((cle) => {
+    if (comptageNoms[cle] > 1) {
+      problemes.push({
+        type: "CRENEAU_DUPLIQUE",
+
+        detail:
+          'Le nom de créneau "' +
+          cle +
+          '" apparaît ' +
+          comptageNoms[cle] +
+          " fois dans l'onglet Creneaux (noms en doublon)",
+      });
+    }
+  });
+
+  /*
+    2) Voeux ne correspondant à AUCUN créneau existant
+
+    Signale une faute de frappe probable : le joueur a demandé
+    un créneau qui n'existe pas (ou plus) sous ce nom exact.
+  */
+
+  const nomsCreneauxValides = new Set(
+    (creneaux || [])
+      .map((c) => cleComparaisonTexte(c.nom))
+      .filter((n) => n !== ""),
+  );
+
+  (joueurs || []).forEach((j) => {
+    (j.voeux || []).forEach((v) => {
+      if (!nomsCreneauxValides.has(cleComparaisonTexte(v))) {
+        problemes.push({
+          type: "VOEU_INCONNU",
+
+          detail:
+            (j.nom || "") +
+            " " +
+            (j.prenom || "") +
+            ' a demandé "' +
+            v +
+            '", qui ne correspond à aucun créneau existant (faute de frappe possible)',
+        });
+      }
+    });
+  });
+
+  /*
+    3) Poids de config invalides
+
+    Un poids négatif ou non numérique produit un classement des
+    candidats incohérent sans qu'aucune erreur ne remonte.
+  */
+
+  const clesPoids = [
+    "Poids niveau",
+    "Poids competition",
+    "Poids age",
+    "Poids sexe",
+    "Poids categorie",
+  ];
+
+  clesPoids.forEach((cle) => {
+    if (!config || !Object.prototype.hasOwnProperty.call(config, cle)) {
+      return;
+    }
+
+    const valeur = config[cle];
+
+    if (valeur === "" || valeur === null || valeur === undefined) {
+      return;
+    }
+
+    const nombre = Number(valeur);
+
+    if (!Number.isFinite(nombre) || nombre < 0) {
+      problemes.push({
+        type: "POIDS_INVALIDE",
+
+        detail:
+          '"' +
+          cle +
+          '" = "' +
+          valeur +
+          '" n\'est pas un nombre valide (doit être un nombre positif ou nul)',
+      });
+    }
+  });
+
+  return problemes;
+}
+
+/**
+ * ===========================================================
+ * EXPORT DIAGNOSTIC
+ * ===========================================================
+ */
+function exporterDiagnostic(problemes) {
+  const feuille = obtenirOuCreerFeuille(SHEETS.DIAGNOSTIC);
+
+  feuille.clear();
+
+  const lignes = [["Type", "Détail"]];
+
+  if (!problemes || problemes.length === 0) {
+    lignes.push(["Aucun problème détecté", ""]);
+  } else {
+    problemes.forEach((p) => {
+      lignes.push([p.type, p.detail]);
+    });
+  }
+
+  ecrireTableau(feuille, lignes);
+
+  feuille.autoResizeColumns(1, 2);
+
+  return feuille;
+}

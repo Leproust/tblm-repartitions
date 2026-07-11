@@ -21,6 +21,11 @@ function exporterGroupes(
   creneaux
 ){
 
+  sauvegarderFeuilleAvantEcrasement(
+    SHEETS.GROUPES
+  );
+
+
   const feuille =
     obtenirOuCreerFeuille(
       SHEETS.GROUPES
@@ -96,7 +101,9 @@ function construireTableauExport(
 
     "Nouveau",
 
-    "Fixé"
+    "Fixé",
+
+    "Repli"
 
   ]);
 
@@ -121,6 +128,8 @@ function construireTableauExport(
           creneau.categorie,
 
           "Aucun joueur",
+
+          "",
 
           "",
 
@@ -190,6 +199,12 @@ function construireTableauExport(
               ?
               "Oui"
               :
+              "Non",
+
+            joueur.repliCompetition
+              ?
+              "Oui"
+              :
               "Non"
 
           ]);
@@ -204,6 +219,8 @@ function construireTableauExport(
       */
 
       lignes.push([
+
+        "",
 
         "",
 

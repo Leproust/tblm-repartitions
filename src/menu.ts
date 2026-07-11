@@ -6,6 +6,7 @@
 function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu("🎾 Répartition Tennis")
+    .addItem("🔍 Vérifier la cohérence des données", "lancerDiagnosticCoherence")
     .addItem("▶ Calculer la répartition", "lancerRepartition")
     .addItem("✔ Valider la répartition", "validerRepartition")
     .addItem("🔁 Rejouer la répartition", "relancerRepartition")

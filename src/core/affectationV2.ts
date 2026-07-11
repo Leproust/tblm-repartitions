@@ -188,6 +188,8 @@ function affecterUnJoueurV2(joueur, creneaux, config) {
 
   joueur.affectation = meilleur.creneau.nom;
 
+  joueur.repliCompetition = enRepli;
+
   if (enRepli) {
     journalInfo(
       "AFFECTATION",

@@ -25,6 +25,7 @@ class Joueur {
   priorite: number;
   verrouille: boolean;
   etat: string;
+  repliCompetition: boolean;
 
   constructor(data: any = {}) {
 
@@ -96,6 +97,11 @@ class Joueur {
 
 
     this.verrouille =
+      false;
+
+
+
+    this.repliCompetition =
       false;
 
 

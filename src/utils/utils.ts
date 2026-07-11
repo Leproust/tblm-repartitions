@@ -360,3 +360,66 @@ function estJeune(joueur) {
     joueur.categorie,
   );
 }
+
+/**
+ * ===========================================================
+ * SAUVEGARDE AVANT ECRASEMENT
+ *
+ * Chaque calcul écrase l'onglet Groupes. Avant de le faire, on
+ * en garde une copie horodatée, pour pouvoir revenir en arrière
+ * si un calcul se passe mal. Ne fait rien si la feuille n'existe
+ * pas encore ou est vide (rien à perdre).
+ *
+ * Conserve au maximum `maxBackups` copies pour ne pas encombrer
+ * le classeur : les plus anciennes sont supprimées automatiquement.
+ * ===========================================================
+ */
+function sauvegarderFeuilleAvantEcrasement(nomFeuille, maxBackups) {
+  maxBackups = maxBackups || 5;
+
+  const ss = SpreadsheetApp.getActive();
+
+  const feuille = ss.getSheetByName(nomFeuille);
+
+  if (!feuille) {
+    return null;
+  }
+
+  const donnees = feuille.getDataRange().getValues();
+
+  if (donnees.length <= 1) {
+    /*
+      Vide, ou juste l'entête : rien à sauvegarder
+    */
+
+    return null;
+  }
+
+  const horodatage = Utilities.formatDate(
+    new Date(),
+    Session.getScriptTimeZone(),
+    "yyyy-MM-dd_HH'h'mm",
+  );
+
+  const prefixe = nomFeuille + "_backup_";
+
+  const copie = feuille.copyTo(ss);
+
+  copie.setName(prefixe + horodatage);
+
+  /*
+    Purge des sauvegardes les plus anciennes au-delà de maxBackups
+    (tri alphabétique = tri chronologique, grâce au format AAAA-MM-JJ)
+  */
+
+  const backups = ss
+    .getSheets()
+    .filter((s) => s.getName().indexOf(prefixe) === 0)
+    .sort((a, b) => a.getName().localeCompare(b.getName()));
+
+  while (backups.length > maxBackups) {
+    ss.deleteSheet(backups.shift());
+  }
+
+  return copie;
+}

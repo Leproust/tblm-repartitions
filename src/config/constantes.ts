@@ -32,6 +32,7 @@ var SHEETS = {
   SANS_SOLUTION: "Sans solution",
   SANS_CRENEAU: "Sans créneau",
   RAPPORT: "Rapport",
+  DIAGNOSTIC: "Diagnostic",
 };
 
 var VOEUX = [

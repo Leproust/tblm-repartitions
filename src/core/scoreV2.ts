@@ -67,7 +67,7 @@ function lirePoidsConfig(config) {
  * SCORE GLOBAL JOUEUR -> CRENEAU
  * ===========================================================
  */
-function calculerScoreV2(joueur, creneau, config, options: { ignorerCompetition?: boolean } = {}) {
+function calculerScoreV2(joueur: JoueurData, creneau: CreneauData, config, options: { ignorerCompetition?: boolean } = {}) {
   /*
     Sécurité :
     un créneau interdit ne doit jamais passer
@@ -90,7 +90,7 @@ function calculerScoreV2(joueur, creneau, config, options: { ignorerCompetition?
  * lui-même : on ne veut donc pas appliquer le garde-fou ici,
  * seulement quand on évalue un NOUVEAU placement candidat.
  */
-function calculerScoreV2Brut(joueur, creneau, config) {
+function calculerScoreV2Brut(joueur: JoueurData, creneau: CreneauData, config) {
   const poids = lirePoidsConfig(config);
 
   let score = 0;
@@ -142,7 +142,7 @@ function calculerScoreV2Brut(joueur, creneau, config) {
  * l'affectation initiale (un seul moteur, cf. calculerScoreV2Brut).
  * ===========================================================
  */
-function scoreCreneauCompletV2(creneau, config) {
+function scoreCreneauCompletV2(creneau: CreneauData, config) {
   let score = 0;
 
   creneau.joueurs.forEach((joueur) => {
@@ -152,7 +152,7 @@ function scoreCreneauCompletV2(creneau, config) {
   return score;
 }
 
-function scoreAffectationTotaleV2(creneaux, config) {
+function scoreAffectationTotaleV2(creneaux: CreneauData[], config) {
   let score = 0;
 
   creneaux.forEach((c) => {
@@ -167,7 +167,7 @@ function scoreAffectationTotaleV2(creneaux, config) {
  * SCORE DES VOEUX
  * ===========================================================
  */
-function scoreVoeuV2(joueur, creneau) {
+function scoreVoeuV2(joueur: JoueurData, creneau: CreneauData) {
   if (!joueur.voeux) {
     return 0;
   }
@@ -204,7 +204,7 @@ function scoreVoeuV2(joueur, creneau) {
  * Très important chez les jeunes
  * ===========================================================
  */
-function scoreAgeV2(joueur, creneau) {
+function scoreAgeV2(joueur: JoueurData, creneau: CreneauData) {
   if (!estJeune(joueur)) {
     return 1;
   }
@@ -250,7 +250,7 @@ function scoreAgeV2(joueur, creneau) {
  * NIVEAU
  * ===========================================================
  */
-function scoreNiveauV2(joueur, creneau) {
+function scoreNiveauV2(joueur: JoueurData, creneau: CreneauData) {
   if (creneau.joueurs.length === 0) {
     return 1;
   }
@@ -279,7 +279,7 @@ function scoreNiveauV2(joueur, creneau) {
   return 0;
 }
 
-function scoreCompetitionV2(joueur, creneau) {
+function scoreCompetitionV2(joueur: JoueurData, creneau: CreneauData) {
   if (estJeune(joueur) || !joueur.competition) {
     return 0;
   }
@@ -305,7 +305,7 @@ function scoreCompetitionV2(joueur, creneau) {
  * EQUILIBRE
  * ===========================================================
  */
-function scoreEquilibreV2(joueur, creneau) {
+function scoreEquilibreV2(joueur: JoueurData, creneau: CreneauData) {
   if (creneau.joueurs.length === 0) {
     return 1;
   }
@@ -331,7 +331,7 @@ function scoreEquilibreV2(joueur, creneau) {
  * Favorise les groupes qui peuvent être complétés
  * ===========================================================
  */
-function scoreRemplissageV2(creneau) {
+function scoreRemplissageV2(creneau: CreneauData) {
   const capacite = capaciteCreneau(creneau);
 
   if (!capacite) return 0;
