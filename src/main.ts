@@ -60,7 +60,7 @@ function lancerRepartition() {
 
   journalInfo("AFFECTATION", "Groupes créés", creneaux.length);
 
-  exporterGroupes(creneaux);
+  exporterGroupes(creneaux, contexte.config);
 
   journalInfo("EXPORT", "Export groupes terminé");
 
@@ -107,7 +107,7 @@ function lancerOptimisation() {
 
   optimisationComplete(creneaux, contexte.config);
 
-  exporterGroupes(creneaux);
+  exporterGroupes(creneaux, contexte.config);
 
   ss.toast("Optimisation terminée");
 }
@@ -130,7 +130,7 @@ function lancerExport() {
     creneaux = affecterJoueursV2(joueurs, contexte.creneaux, contexte.config).creneaux;
   }
 
-  exporterGroupes(creneaux);
+  exporterGroupes(creneaux, contexte.config);
 }
 
 /**
@@ -202,7 +202,7 @@ function relancerRepartition() {
 
   optimiserRepartition(groupes, { iterations: 500, config: contexte.config });
 
-  exporterGroupes(groupes);
+  exporterGroupes(groupes, contexte.config);
 
   const stats = genererStatistiques(joueurs, groupes);
 

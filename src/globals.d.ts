@@ -57,6 +57,8 @@ declare function obtenirOuCreerFeuille(nom: string): any;
 declare function sauvegarderFeuilleAvantEcrasement(nomFeuille: string, maxBackups?: number): any;
 declare function viderFeuille(nom: string): void;
 declare function ecrireTableau(feuille: any, donnees: any[][]): void;
+declare function creneauxPossibles(joueur: any, creneaux: any[], options?: { ignorerCompetition?: boolean }): any[];
+declare function calculerScoreV2(joueur: any, creneau: any, config: any, options?: { ignorerCompetition?: boolean }): number;
 declare function affecterJoueursV2(joueurs: any[], creneaux: any[], config: any): any;
 declare function optimiserRepartition(creneaux: any[], parametres: any): void;
 declare function optimisationComplete(creneaux: any[], config?: any): void;

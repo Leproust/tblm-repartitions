@@ -18,7 +18,8 @@
  * Point d'entrée principal
  */
 function exporterGroupes(
-  creneaux
+  creneaux,
+  config
 ){
 
   sauvegarderFeuilleAvantEcrasement(
@@ -39,7 +40,8 @@ function exporterGroupes(
 
   const lignes =
     construireTableauExport(
-      creneaux
+      creneaux,
+      config
     );
 
 
@@ -66,8 +68,47 @@ function exporterGroupes(
  * CONSTRUCTION TABLEAU
  * ===========================================================
  */
+/**
+ * ===========================================================
+ * ALTERNATIVE SUGGEREE
+ *
+ * Pour faciliter les ajustements manuels du coach : sur chaque
+ * ligne, indique le meilleur AUTRE créneau où ce joueur pourrait
+ * aussi aller (parmi ceux qui respectent les mêmes contraintes
+ * que l'affectation d'origine — catégorie, âge, compétition...).
+ *
+ * Pas de duplication de ligne : juste une information en plus
+ * sur la ligne existante, donc aucun risque de fausser les
+ * compteurs (occupation, statistiques) par un double comptage.
+ * ===========================================================
+ */
+function trouverAlternative(joueur, creneauActuel, creneaux, config) {
+  const autres = creneaux.filter((c) => c !== creneauActuel);
+
+  const possibles = creneauxPossibles(joueur, autres);
+
+  if (possibles.length === 0) {
+    return "";
+  }
+
+  const classement = possibles.map((c) => ({
+    creneau: c,
+    score: calculerScoreV2(joueur, c, config),
+  }));
+
+  classement.sort((a, b) => b.score - a.score);
+
+  return classement[0].creneau.nom;
+}
+
+/**
+ * ===========================================================
+ * CONSTRUCTION DU TABLEAU
+ * ===========================================================
+ */
 function construireTableauExport(
-  creneaux
+  creneaux,
+  config = undefined
 ){
 
   const lignes=[];
@@ -103,7 +144,9 @@ function construireTableauExport(
 
     "Fixé",
 
-    "Repli"
+    "Repli",
+
+    "Alternative suggérée"
 
   ]);
 
@@ -128,6 +171,8 @@ function construireTableauExport(
           creneau.categorie,
 
           "Aucun joueur",
+
+          "",
 
           "",
 
@@ -205,7 +250,13 @@ function construireTableauExport(
               ?
               "Oui"
               :
-              "Non"
+              "Non",
+
+            joueur.verrouille
+              ?
+              ""
+              :
+              trouverAlternative(joueur, creneau, creneaux, config)
 
           ]);
 
@@ -219,6 +270,8 @@ function construireTableauExport(
       */
 
       lignes.push([
+
+        "",
 
         "",
 

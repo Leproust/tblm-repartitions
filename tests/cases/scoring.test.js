@@ -43,4 +43,57 @@ module.exports = ({ ctx, it, assertTrue }) => {
     assertTrue(lignes[1][indexRepli] === "Oui", "DUPONT est en repli -> Oui");
     assertTrue(lignes[2][indexRepli] === "Non", "MARTIN n'est pas en repli -> Non");
   });
+
+  it("propose une alternative suggérée quand un autre créneau compatible existe", () => {
+    const { construireTableauExport } = ctx;
+
+    const joueur = {
+      nom: "DUPONT", prenom: "Marc", licence: "1", categorie: "Homme adulte",
+      age: 30, classement: "NC", niveau: 100, sexe: "H", competition: false,
+      nouveau: false, verrouille: false, repliCompetition: false,
+      voeux: ["Lundi 21H", "Mardi 19H"],
+    };
+
+    const creneauActuel = {
+      nom: "Lundi 21H", categorie: "Homme adulte", actif: true, effectif: 4, surbooking: 0,
+      joueurs: [joueur],
+    };
+
+    const creneauAlternatif = {
+      nom: "Mardi 19H", categorie: "Homme adulte", actif: true, effectif: 4, surbooking: 0,
+      joueurs: [],
+    };
+
+    const lignes = construireTableauExport([creneauActuel, creneauAlternatif], {});
+    const indexAlternative = lignes[0].indexOf("Alternative suggérée");
+
+    assertTrue(indexAlternative !== -1, "la colonne Alternative suggérée doit exister");
+    assertTrue(lignes[1][indexAlternative] === "Mardi 19H", "doit suggérer l'autre créneau de son voeu");
+  });
+
+  it("ne propose pas d'alternative pour un joueur verrouillé (Fixé)", () => {
+    const { construireTableauExport } = ctx;
+
+    const joueur = {
+      nom: "DUPONT", prenom: "Marc", licence: "1", categorie: "Homme adulte",
+      age: 30, classement: "NC", niveau: 100, sexe: "H", competition: false,
+      nouveau: false, verrouille: true, repliCompetition: false,
+      voeux: ["Lundi 21H", "Mardi 19H"],
+    };
+
+    const creneauActuel = {
+      nom: "Lundi 21H", categorie: "Homme adulte", actif: true, effectif: 4, surbooking: 0,
+      joueurs: [joueur],
+    };
+
+    const creneauAlternatif = {
+      nom: "Mardi 19H", categorie: "Homme adulte", actif: true, effectif: 4, surbooking: 0,
+      joueurs: [],
+    };
+
+    const lignes = construireTableauExport([creneauActuel, creneauAlternatif], {});
+    const indexAlternative = lignes[0].indexOf("Alternative suggérée");
+
+    assertTrue(lignes[1][indexAlternative] === "", "un joueur verrouillé ne doit pas avoir d'alternative suggérée");
+  });
 };
