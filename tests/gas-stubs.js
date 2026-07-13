@@ -98,6 +98,11 @@ function createStubs() {
 
         return this;
       },
+
+      appendRow(ligne) {
+        this.data.push(ligne.slice());
+        return this;
+      },
     };
   }
 

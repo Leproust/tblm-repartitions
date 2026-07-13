@@ -108,10 +108,8 @@ function testerEchange(groupeA: CreneauData, groupeB: CreneauData, config) {
   const avant =
     scoreCreneauCompletV2(groupeA, config) + scoreCreneauCompletV2(groupeB, config);
 
-  for (let i = 0; i < joueursA.length; i++) {
-    const joueurA = joueursA[i];
-    for (let j = 0; j < joueursB.length; j++) {
-      const joueurB = joueursB[j];
+  for (const joueurA of joueursA) {
+    for (const joueurB of joueursB) {
 
       /*
         Vérification compatibilité
@@ -123,11 +121,27 @@ function testerEchange(groupeA: CreneauData, groupeB: CreneauData, config) {
 
       /*
         Simulation
+
+        ATTENTION : on retrouve l'index RÉEL de chaque joueur
+        dans le tableau (non filtré) du groupe. joueursA/joueursB
+        sont des tableaux FILTRÉS (verrouillés exclus) : leurs
+        indices ne correspondent pas forcément à ceux de
+        groupeA.joueurs/groupeB.joueurs dès qu'un groupe mélange
+        joueurs verrouillés et non verrouillés. Utiliser l'index
+        du tableau filtré pour muter le tableau réel écrasait
+        silencieusement le mauvais joueur (potentiellement un
+        joueur verrouillé), pouvant aller jusqu'à dupliquer un
+        même joueur sur plusieurs places du même créneau au fil
+        des itérations.
       */
 
-      groupeA.joueurs[i] = joueurB;
+      const indexA = groupeA.joueurs.indexOf(joueurA);
 
-      groupeB.joueurs[j] = joueurA;
+      const indexB = groupeB.joueurs.indexOf(joueurB);
+
+      groupeA.joueurs[indexA] = joueurB;
+
+      groupeB.joueurs[indexB] = joueurA;
 
       const apres =
         scoreCreneauCompletV2(groupeA, config) +
@@ -150,9 +164,9 @@ function testerEchange(groupeA: CreneauData, groupeB: CreneauData, config) {
         Annulation
       */
 
-      groupeA.joueurs[i] = joueurA;
+      groupeA.joueurs[indexA] = joueurA;
 
-      groupeB.joueurs[j] = joueurB;
+      groupeB.joueurs[indexB] = joueurB;
     }
   }
 
