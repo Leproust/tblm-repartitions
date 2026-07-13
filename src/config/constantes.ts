@@ -33,6 +33,7 @@ var SHEETS = {
   SANS_CRENEAU: "Sans créneau",
   RAPPORT: "Rapport",
   DIAGNOSTIC: "Diagnostic",
+  CANDIDATS: "Candidats par créneau",
 };
 
 var VOEUX = [

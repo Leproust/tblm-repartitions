@@ -17,6 +17,7 @@ function onOpen() {
     .addItem("📊 Générer statistiques", "lancerStatistiques")
     .addItem("📊 Voir les places disponibles", "exporterOccupation")
     .addItem("👤 Voir joueurs sans créneau", "exporterJoueursSansCreneau")
+    .addItem("🧩 Candidats possibles par créneau", "lancerCandidatsParCreneau")
     .addSeparator()
     .addItem("🧪 Diagnostic données", "diagnosticDonnees")
     .addToUi();

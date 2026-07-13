@@ -280,6 +280,29 @@ function lancerDiagnosticCoherence() {
 
 /**
  * ===========================================================
+ * CANDIDATS PAR CRENEAU
+ *
+ * Vue d'aide à la répartition manuelle : pour chaque créneau,
+ * la liste de tous les joueurs qui pourraient y aller (pas
+ * seulement ceux qui l'ont demandé), triés par pertinence.
+ * ===========================================================
+ */
+function lancerCandidatsParCreneau() {
+  const contexte = chargerContexte();
+
+  const joueurs = enrichirJoueurs(contexte.joueurs);
+
+  const creneaux = chargerGroupesDepuisFeuille(joueurs, contexte.creneaux);
+
+  exporterCandidatsParCreneau(joueurs, creneaux, contexte.config);
+
+  SpreadsheetApp.getActive().toast(
+    "Liste des candidats par créneau générée dans l'onglet " + SHEETS.CANDIDATS,
+  );
+}
+
+/**
+ * ===========================================================
  * ERREURS
  * ===========================================================
  */
